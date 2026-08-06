@@ -642,65 +642,70 @@ export default function Dashboard() {
     return `${position}e`;
   }
 
-  async function seDeconnecter() {
-    if (deconnexionEnCours) {
-      return;
-    }
+async function seDeconnecter() {
+  if (deconnexionEnCours) {
+    return;
+  }
 
-    setDeconnexionEnCours(true);
+  setDeconnexionEnCours(true);
 
-    const playerId =
-      sessionStorage.getItem("player_id");
+  const playerId =
+    sessionStorage.getItem("player_id");
 
-    if (!playerId) {
-      sessionStorage.removeItem("player_id");
-      sessionStorage.removeItem("player_token");
-      navigate("/");
-      return;
-    }
+  const playerToken =
+    sessionStorage.getItem("player_token");
 
-    const { data, error } = await supabase.rpc(
-      "logout_player",
-      {
-        p_player_id: Number(playerId),
-      }
-    );
-
-    if (error) {
-      console.error(
-        "Erreur logout_player :",
-        error
-      );
-
-      setDeconnexionEnCours(false);
-
-      alert(
-        `La déconnexion n’a pas fonctionné : ${error.message}`
-      );
-
-      return;
-    }
-
-    if (data !== true) {
-      console.error(
-        "Résultat inattendu de logout_player :",
-        data
-      );
-
-      setDeconnexionEnCours(false);
-
-      alert(
-        "Supabase n’a pas confirmé la déconnexion."
-      );
-
-      return;
-    }
-
+  if (!playerId || !playerToken) {
     sessionStorage.removeItem("player_id");
     sessionStorage.removeItem("player_token");
 
     navigate("/");
+    return;
   }
+
+  const { data, error } = await supabase.rpc(
+    "logout_player",
+    {
+      p_player_id: Number(playerId),
+      p_token: playerToken,
+    }
+  );
+
+  if (error) {
+    console.error(
+      "Erreur pendant la déconnexion :",
+      error
+    );
+
+    setDeconnexionEnCours(false);
+
+    alert(
+      `La déconnexion n’a pas fonctionné : ${error.message}`
+    );
+
+    return;
+  }
+
+  if (data !== true) {
+    console.error(
+      "Aucune session correspondant au token :",
+      data
+    );
+
+    setDeconnexionEnCours(false);
+
+    alert(
+      "La session de ce téléphone n’a pas été retrouvée."
+    );
+
+    return;
+  }
+
+  sessionStorage.removeItem("player_id");
+  sessionStorage.removeItem("player_token");
+
+  navigate("/");
+}
 
   const styleAnimation = {
     transition:
