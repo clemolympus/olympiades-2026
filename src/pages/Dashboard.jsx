@@ -150,9 +150,9 @@ export default function Dashboard() {
     }
 
     minuterieRevelation.current =
-      window.setTimeout(() => {
-        setEquipeRevelee(null);
-      }, 10000);
+  window.setTimeout(() => {
+    fermerRevelationEquipe();
+  }, 10000);
 
     return () => {
       document.body.style.overflow = "";
@@ -278,23 +278,26 @@ export default function Dashboard() {
       return;
     }
 
+setEquipeRevelee({
+  ...equipeAttribuee,
+  cleMemoire,
+});
+  }
+
+function fermerRevelationEquipe() {
+  if (minuterieRevelation.current) {
+    window.clearTimeout(minuterieRevelation.current);
+  }
+
+  if (equipeRevelee?.cleMemoire && equipeRevelee?.id) {
     sessionStorage.setItem(
-      cleMemoire,
-      String(equipeId)
+      equipeRevelee.cleMemoire,
+      String(equipeRevelee.id)
     );
-
-    setEquipeRevelee(equipeAttribuee);
   }
 
-  function fermerRevelationEquipe() {
-    if (minuterieRevelation.current) {
-      window.clearTimeout(
-        minuterieRevelation.current
-      );
-    }
-
-    setEquipeRevelee(null);
-  }
+  setEquipeRevelee(null);
+}
 
   function detecterNouveauDefiValide(
     nouveauxDefis,
