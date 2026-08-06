@@ -38,6 +38,17 @@ const styleCarte = {
   background: couleurs.carte,
 };
 
+const couleursConfettis = [
+  "#facc15",
+  "#f97316",
+  "#ef4444",
+  "#22c55e",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#f8fafc",
+];
+
 export default function Dashboard() {
   const navigate = useNavigate();
 
@@ -55,7 +66,9 @@ export default function Dashboard() {
   const [animationPoints, setAnimationPoints] = useState(false);
   const [animationVictoires, setAnimationVictoires] =
     useState(false);
-  const [animationEquipe, setAnimationEquipe] = useState(false);
+  const [animationEquipe, setAnimationEquipe] =
+    useState(false);
+
   const [deconnexionEnCours, setDeconnexionEnCours] =
     useState(false);
 
@@ -71,6 +84,27 @@ export default function Dashboard() {
   const anciensPointsEquipe = useRef(null);
 
   const minuterieNotification = useRef(null);
+  const minuterieRevelation = useRef(null);
+
+  const confettis = useMemo(() => {
+    return Array.from({ length: 90 }, (_, index) => ({
+      id: index,
+      gauche: Math.random() * 100,
+      delai: Math.random() * 1.8,
+      duree: 3.2 + Math.random() * 3,
+      largeur: 5 + Math.random() * 7,
+      hauteur: 9 + Math.random() * 12,
+      rotation: Math.random() * 360,
+      derive: -70 + Math.random() * 140,
+      couleur:
+        couleursConfettis[
+          Math.floor(
+            Math.random() * couleursConfettis.length
+          )
+        ],
+      forme: Math.random() > 0.72 ? "50%" : "2px",
+    }));
+  }, []);
 
   useEffect(() => {
     chargerDonnees();
@@ -88,8 +122,48 @@ export default function Dashboard() {
           minuterieNotification.current
         );
       }
+
+      if (minuterieRevelation.current) {
+        window.clearTimeout(
+          minuterieRevelation.current
+        );
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (!equipeRevelee) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    document.body.style.overflow = "hidden";
+
+    if (sonsActifs) {
+      jouerApplaudissements();
+    }
+
+    if (minuterieRevelation.current) {
+      window.clearTimeout(
+        minuterieRevelation.current
+      );
+    }
+
+    minuterieRevelation.current =
+      window.setTimeout(() => {
+        setEquipeRevelee(null);
+      }, 10000);
+
+    return () => {
+      document.body.style.overflow = "";
+
+      if (minuterieRevelation.current) {
+        window.clearTimeout(
+          minuterieRevelation.current
+        );
+      }
+    };
+  }, [equipeRevelee]);
 
   async function chargerDonnees() {
     const playerId =
@@ -105,6 +179,7 @@ export default function Dashboard() {
         supabase.rpc("get_player_profile", {
           p_player_id: Number(playerId),
         }),
+
         supabase.rpc("get_state"),
       ]);
 
@@ -193,10 +268,11 @@ export default function Dashboard() {
       return;
     }
 
-    const equipeAttribuee = nouvellesEquipes.find(
-      (equipe) =>
-        Number(equipe.id) === equipeId
-    );
+    const equipeAttribuee =
+      nouvellesEquipes.find(
+        (equipe) =>
+          Number(equipe.id) === equipeId
+      );
 
     if (!equipeAttribuee) {
       return;
@@ -211,6 +287,12 @@ export default function Dashboard() {
   }
 
   function fermerRevelationEquipe() {
+    if (minuterieRevelation.current) {
+      window.clearTimeout(
+        minuterieRevelation.current
+      );
+    }
+
     setEquipeRevelee(null);
   }
 
@@ -227,11 +309,12 @@ export default function Dashboard() {
     );
 
     if (!initialisationTerminee.current) {
-      idsDefisValidesConnus.current = new Set(
-        defisValides.map((defi) =>
-          Number(defi.id)
-        )
-      );
+      idsDefisValidesConnus.current =
+        new Set(
+          defisValides.map((defi) =>
+            Number(defi.id)
+          )
+        );
 
       initialisationTerminee.current = true;
       return;
@@ -260,24 +343,29 @@ export default function Dashboard() {
         Number(nouveauDefi.winner_id)
     );
 
-    const equipeGagnante = nouvellesEquipes.find(
-      (equipe) =>
-        Number(equipe.id) ===
-        Number(
-          nouveauDefi.winning_team_id ??
-            gagnant?.team_id
-        )
-    );
+    const equipeGagnante =
+      nouvellesEquipes.find(
+        (equipe) =>
+          Number(equipe.id) ===
+          Number(
+            nouveauDefi.winning_team_id ??
+              gagnant?.team_id
+          )
+      );
 
     const concerneJoueur =
-      Number(nouveauDefi.creator_id) === playerId ||
-      Number(nouveauDefi.opponent_id) === playerId ||
-      Number(nouveauDefi.witness_id) === playerId;
+      Number(nouveauDefi.creator_id) ===
+        playerId ||
+      Number(nouveauDefi.opponent_id) ===
+        playerId ||
+      Number(nouveauDefi.witness_id) ===
+        playerId;
 
-    const joueurActuel = nouveauxJoueurs.find(
-      (element) =>
-        Number(element.id) === playerId
-    );
+    const joueurActuel =
+      nouveauxJoueurs.find(
+        (element) =>
+          Number(element.id) === playerId
+      );
 
     const concerneEquipe =
       Boolean(equipeGagnante?.id) &&
@@ -288,6 +376,7 @@ export default function Dashboard() {
       titre: `${
         gagnant?.first_name ?? "Un joueur"
       } remporte son défi`,
+
       texte: equipeGagnante
         ? `${equipeGagnante.flag} ${equipeGagnante.name} gagne 1 point.`
         : "Le classement vient d’être mis à jour.",
@@ -304,7 +393,9 @@ export default function Dashboard() {
   function afficherNotification(
     nouvelleNotification
   ) {
-    setNotification(nouvelleNotification);
+    setNotification(
+      nouvelleNotification
+    );
 
     if (minuterieNotification.current) {
       window.clearTimeout(
@@ -334,8 +425,8 @@ export default function Dashboard() {
         contexte.resume();
       }
 
-      const duree = 1.25;
-      const nombreImpulsions = 24;
+      const duree = 1.5;
+      const nombreImpulsions = 32;
 
       for (
         let index = 0;
@@ -346,11 +437,12 @@ export default function Dashboard() {
           contexte.currentTime +
           Math.random() * duree;
 
-        const buffer = contexte.createBuffer(
-          1,
-          contexte.sampleRate * 0.08,
-          contexte.sampleRate
-        );
+        const buffer =
+          contexte.createBuffer(
+            1,
+            contexte.sampleRate * 0.08,
+            contexte.sampleRate
+          );
 
         const donnees =
           buffer.getChannelData(0);
@@ -382,11 +474,12 @@ export default function Dashboard() {
         source.buffer = buffer;
 
         filtre.type = "bandpass";
+
         filtre.frequency.value =
           900 + Math.random() * 1700;
 
         gain.gain.setValueAtTime(
-          0.05 + Math.random() * 0.05,
+          0.04 + Math.random() * 0.055,
           debut
         );
 
@@ -397,7 +490,9 @@ export default function Dashboard() {
 
         source.connect(filtre);
         filtre.connect(gain);
-        gain.connect(contexte.destination);
+        gain.connect(
+          contexte.destination
+        );
 
         source.start(debut);
         source.stop(debut + 0.09);
@@ -405,7 +500,7 @@ export default function Dashboard() {
 
       window.setTimeout(() => {
         contexte.close();
-      }, 1800);
+      }, 2200);
     } catch (audioError) {
       console.warn(
         "Le son n’a pas pu être joué.",
@@ -415,7 +510,8 @@ export default function Dashboard() {
   }
 
   function basculerSons() {
-    const nouvelleValeur = !sonsActifs;
+    const nouvelleValeur =
+      !sonsActifs;
 
     setSonsActifs(nouvelleValeur);
 
@@ -433,18 +529,22 @@ export default function Dashboard() {
     return equipes
       .map((equipe) => ({
         ...equipe,
+
         membres: joueurs.filter(
           (membre) =>
             Number(membre.team_id) ===
             Number(equipe.id)
         ),
+
         scoreTotal: Number(
           equipe.score ?? 0
         ),
       }))
+
       .sort((a, b) => {
         const difference =
-          b.scoreTotal - a.scoreTotal;
+          b.scoreTotal -
+          a.scoreTotal;
 
         if (difference !== 0) {
           return difference;
@@ -457,11 +557,12 @@ export default function Dashboard() {
       });
   }, [equipes, joueurs]);
 
-  const monEquipe = classement.find(
-    (equipe) =>
-      Number(equipe.id) ===
-      Number(joueur?.team_id)
-  );
+  const monEquipe =
+    classement.find(
+      (equipe) =>
+        Number(equipe.id) ===
+        Number(joueur?.team_id)
+    );
 
   const positionEquipe =
     classement.findIndex(
@@ -487,7 +588,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (
-      anciensPointsJoueur.current === null
+      anciensPointsJoueur.current ===
+      null
     ) {
       anciensPointsJoueur.current =
         pointsJoueur;
@@ -509,13 +611,16 @@ export default function Dashboard() {
         pointsJoueur;
 
       return () =>
-        window.clearTimeout(minuterie);
+        window.clearTimeout(
+          minuterie
+        );
     }
   }, [pointsJoueur]);
 
   useEffect(() => {
     if (
-      anciennesVictoires.current === null
+      anciennesVictoires.current ===
+      null
     ) {
       anciennesVictoires.current =
         victoires;
@@ -537,7 +642,9 @@ export default function Dashboard() {
         victoires;
 
       return () =>
-        window.clearTimeout(minuterie);
+        window.clearTimeout(
+          minuterie
+        );
     }
   }, [victoires]);
 
@@ -550,7 +657,8 @@ export default function Dashboard() {
     }
 
     if (
-      anciensPointsEquipe.current === null
+      anciensPointsEquipe.current ===
+      null
     ) {
       anciensPointsEquipe.current =
         scoreEquipe;
@@ -572,7 +680,9 @@ export default function Dashboard() {
         scoreEquipe;
 
       return () =>
-        window.clearTimeout(minuterie);
+        window.clearTimeout(
+          minuterie
+        );
     }
   }, [monEquipe?.scoreTotal]);
 
@@ -591,6 +701,7 @@ export default function Dashboard() {
           Number(defi.witness_id) ===
             Number(joueur.id)
       )
+
       .sort(
         (a, b) =>
           new Date(
@@ -602,10 +713,11 @@ export default function Dashboard() {
       );
   }, [defis, joueur]);
 
-  const defiEnAttente = mesDefis.find(
-    (defi) =>
-      defi.status === "pending"
-  );
+  const defiEnAttente =
+    mesDefis.find(
+      (defi) =>
+        defi.status === "pending"
+    );
 
   const dernierDefi =
     defiEnAttente ?? mesDefis[0];
@@ -666,7 +778,8 @@ export default function Dashboard() {
       return {
         texte: "Aucun défi",
         couleur: "#94a3b8",
-        fond: "rgba(148, 163, 184, 0.1)",
+        fond:
+          "rgba(148, 163, 184, 0.1)",
       };
     }
 
@@ -674,7 +787,8 @@ export default function Dashboard() {
       return {
         texte: "En attente",
         couleur: "#fde047",
-        fond: "rgba(250, 204, 21, 0.11)",
+        fond:
+          "rgba(250, 204, 21, 0.11)",
       };
     }
 
@@ -685,14 +799,16 @@ export default function Dashboard() {
       return {
         texte: "Gagné",
         couleur: "#4ade80",
-        fond: "rgba(34, 197, 94, 0.11)",
+        fond:
+          "rgba(34, 197, 94, 0.11)",
       };
     }
 
     return {
       texte: "Terminé",
       couleur: "#cbd5e1",
-      fond: "rgba(148, 163, 184, 0.1)",
+      fond:
+        "rgba(148, 163, 184, 0.1)",
     };
   }
 
@@ -712,20 +828,27 @@ export default function Dashboard() {
     setDeconnexionEnCours(true);
 
     const playerId =
-      sessionStorage.getItem("player_id");
+      sessionStorage.getItem(
+        "player_id"
+      );
 
     const playerToken =
-      sessionStorage.getItem("player_token");
+      sessionStorage.getItem(
+        "player_token"
+      );
 
     try {
       if (playerId && playerToken) {
-        const { data, error } = await supabase.rpc(
-          "logout_player",
-          {
-            p_player_id: Number(playerId),
-            p_token: playerToken,
-          }
-        );
+        const { data, error } =
+          await supabase.rpc(
+            "logout_player",
+            {
+              p_player_id:
+                Number(playerId),
+
+              p_token: playerToken,
+            }
+          );
 
         if (error) {
           console.warn(
@@ -744,8 +867,13 @@ export default function Dashboard() {
         erreurDeconnexion
       );
     } finally {
-      sessionStorage.removeItem("player_id");
-      sessionStorage.removeItem("player_token");
+      sessionStorage.removeItem(
+        "player_id"
+      );
+
+      sessionStorage.removeItem(
+        "player_token"
+      );
 
       navigate("/", {
         replace: true,
@@ -760,6 +888,7 @@ export default function Dashboard() {
 
   const styleRebond = {
     transform: "scale(1.02)",
+
     boxShadow:
       "0 0 0 2px rgba(167, 139, 250, 0.25)",
   };
@@ -813,8 +942,10 @@ export default function Dashboard() {
     <main
       style={{
         minHeight: "100vh",
-        padding: "16px 14px 105px",
+        padding:
+          "16px 14px 105px",
         color: couleurs.texte,
+
         background:
           "radial-gradient(circle at top, #17164f 0%, #080d20 38%, #020617 100%)",
       }}
@@ -830,108 +961,416 @@ export default function Dashboard() {
             zIndex: 5000,
             display: "grid",
             placeItems: "center",
-            padding: 24,
+            padding: 20,
             overflow: "hidden",
             color: "#f8fafc",
             textAlign: "center",
+
             background:
-              "radial-gradient(circle at center, #312e81 0%, #111047 40%, #020617 82%)",
+              "radial-gradient(circle at 50% 45%, #4338ca 0%, #261b74 28%, #0b1235 58%, #020617 100%)",
+
             animation:
-              "apparitionEquipe 0.45s ease",
+              "ouvertureRevelation 0.65s ease both",
           }}
         >
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              opacity: 0.32,
+              inset: "-30%",
+              opacity: 0.28,
+
               background:
-                "radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.8), transparent 23%), radial-gradient(circle at 80% 75%, rgba(59, 130, 246, 0.6), transparent 25%)",
+                "repeating-conic-gradient(from 0deg, rgba(255,255,255,0.22) 0deg 5deg, transparent 5deg 15deg)",
+
+              animation:
+                "rotationRayons 22s linear infinite",
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              top: "48%",
+              left: "50%",
+              width:
+                "min(130vw, 760px)",
+              height:
+                "min(130vw, 760px)",
+              border:
+                "2px solid rgba(255,255,255,0.12)",
+              borderRadius: "50%",
+              boxShadow:
+                "0 0 80px rgba(139, 92, 246, 0.38), inset 0 0 80px rgba(59, 130, 246, 0.18)",
+
+              transform:
+                "translate(-50%, -50%)",
+
+              animation:
+                "pulsationCercle 2s ease-in-out infinite",
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              top: "48%",
+              left: "50%",
+              width:
+                "min(92vw, 560px)",
+              height:
+                "min(92vw, 560px)",
+              border:
+                "1px solid rgba(255,255,255,0.18)",
+              borderRadius: "50%",
+
+              transform:
+                "translate(-50%, -50%)",
+
+              animation:
+                "pulsationCercleDeux 2.5s ease-in-out infinite",
+            }}
+          />
+
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              overflow: "hidden",
+              pointerEvents: "none",
+            }}
+          >
+            {confettis.map(
+              (confetti) => (
+                <span
+                  key={confetti.id}
+                  style={{
+                    "--derive-confetti":
+                      `${confetti.derive}px`,
+
+                    position:
+                      "absolute",
+
+                    top: -30,
+
+                    left:
+                      `${confetti.gauche}%`,
+
+                    width:
+                      confetti.largeur,
+
+                    height:
+                      confetti.hauteur,
+
+                    borderRadius:
+                      confetti.forme,
+
+                    background:
+                      confetti.couleur,
+
+                    boxShadow:
+                      "0 0 8px rgba(255,255,255,0.22)",
+
+                    transform:
+                      `rotate(${confetti.rotation}deg)`,
+
+                    animationName:
+                      "chuteConfetti",
+
+                    animationDuration:
+                      `${confetti.duree}s`,
+
+                    animationDelay:
+                      `${confetti.delai}s`,
+
+                    animationTimingFunction:
+                      "cubic-bezier(.2,.65,.35,1)",
+
+                    animationIterationCount:
+                      "infinite",
+                  }}
+                />
+              )
+            )}
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              top: "16%",
+              left: "13%",
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: "#fde047",
+
+              boxShadow:
+                "0 0 22px 8px rgba(253, 224, 71, 0.52)",
+
+              animation:
+                "etoileBrillante 1.4s ease-in-out infinite",
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              top: "21%",
+              right: "16%",
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: "#f8fafc",
+
+              boxShadow:
+                "0 0 20px 7px rgba(248, 250, 252, 0.42)",
+
+              animation:
+                "etoileBrillante 1.8s 0.3s ease-in-out infinite",
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              bottom: "19%",
+              left: "19%",
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: "#c4b5fd",
+
+              boxShadow:
+                "0 0 22px 8px rgba(196, 181, 253, 0.45)",
+
+              animation:
+                "etoileBrillante 1.6s 0.6s ease-in-out infinite",
             }}
           />
 
           <section
             style={{
               position: "relative",
+              zIndex: 5,
               width: "100%",
-              maxWidth: 520,
+              maxWidth: 620,
             }}
           >
-            <p
+            <div
               style={{
-                margin: 0,
-                color: "#c4b5fd",
-                fontSize: 14,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "8px 14px",
+                border:
+                  "1px solid rgba(255,255,255,0.22)",
+                borderRadius: 999,
+                color: "#ddd6fe",
+                background:
+                  "rgba(15, 23, 42, 0.5)",
+                backdropFilter:
+                  "blur(10px)",
+                fontSize: 12,
                 fontWeight: 900,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
+                letterSpacing:
+                  "0.13em",
+                textTransform:
+                  "uppercase",
+
+                animation:
+                  "arriveeBadge 0.65s 0.15s ease both",
               }}
             >
-              Ton équipe est...
+              <span>🏆</span>
+              Attribution terminée
+            </div>
+
+            <p
+              style={{
+                margin: "20px 0 0",
+                color: "#e2e8f0",
+
+                fontSize:
+                  "clamp(17px, 4.8vw, 24px)",
+
+                fontWeight: 900,
+
+                letterSpacing:
+                  "0.08em",
+
+                lineHeight: 1.2,
+
+                textTransform:
+                  "uppercase",
+
+                textShadow:
+                  "0 6px 22px rgba(0,0,0,0.4)",
+
+                animation:
+                  "arriveeTexte 0.7s 0.45s ease both",
+              }}
+            >
+              Vous faites partie de
+              l’équipe
             </p>
 
             <div
               style={{
-                marginTop: 20,
-                fontSize:
-                  "clamp(120px, 35vw, 210px)",
-                lineHeight: 1,
-                filter:
-                  "drop-shadow(0 18px 35px rgba(0, 0, 0, 0.45))",
-                animation:
-                  "drapeauEquipe 0.75s cubic-bezier(.2,.9,.25,1.2)",
+                position: "relative",
+                display: "grid",
+                placeItems: "center",
+                minHeight:
+                  "clamp(165px, 42vw, 245px)",
+                marginTop: 4,
               }}
             >
-              {equipeRevelee.flag}
+              <div
+                style={{
+                  position: "absolute",
+                  width:
+                    "clamp(140px, 37vw, 230px)",
+                  height:
+                    "clamp(140px, 37vw, 230px)",
+
+                  borderRadius: "50%",
+
+                  background:
+                    "radial-gradient(circle, rgba(255,255,255,0.27), rgba(139,92,246,0.12) 45%, transparent 70%)",
+
+                  filter:
+                    "blur(2px)",
+
+                  animation:
+                    "haloDrapeau 1.9s ease-in-out infinite",
+                }}
+              />
+
+              <div
+                style={{
+                  position: "relative",
+
+                  fontSize:
+                    "clamp(115px, 35vw, 205px)",
+
+                  lineHeight: 1,
+
+                  filter:
+                    "drop-shadow(0 20px 28px rgba(0, 0, 0, 0.5))",
+
+                  animation:
+                    "revelationDrapeau 1.15s 0.8s cubic-bezier(.16,1.25,.35,1) both",
+                }}
+              >
+                {equipeRevelee.flag}
+              </div>
             </div>
 
             <h1
               style={{
-                margin: "24px 0 0",
+                margin: "4px 0 0",
+
                 fontSize:
-                  "clamp(36px, 10vw, 62px)",
-                lineHeight: 1,
-                textTransform: "uppercase",
+                  "clamp(38px, 11vw, 70px)",
+
+                lineHeight: 0.95,
+
+                letterSpacing:
+                  "0.025em",
+
+                textTransform:
+                  "uppercase",
+
                 textShadow:
-                  "0 10px 30px rgba(0, 0, 0, 0.4)",
+                  "0 10px 35px rgba(0,0,0,0.52)",
+
+                animation:
+                  "revelationNom 0.75s 1.25s cubic-bezier(.2,.9,.3,1.18) both",
               }}
             >
               {equipeRevelee.name}
             </h1>
 
+            <div
+              style={{
+                width: 90,
+                height: 3,
+                margin: "19px auto 0",
+                borderRadius: 999,
+
+                background:
+                  "linear-gradient(90deg, transparent, #c4b5fd, #fde047, #c4b5fd, transparent)",
+
+                animation:
+                  "agrandissementLigne 0.7s 1.55s ease both",
+              }}
+            />
+
             <p
               style={{
-                margin: "15px 0 0",
+                margin: "15px auto 0",
+                maxWidth: 420,
                 color: "#cbd5e1",
-                fontSize: 17,
+                fontSize:
+                  "clamp(14px, 4vw, 17px)",
+                lineHeight: 1.5,
+
+                animation:
+                  "arriveeTexte 0.7s 1.65s ease both",
               }}
             >
-              Bienvenue dans ta nation. Fais-la gagner !
+              Représente fièrement ta
+              nation et mène ton équipe
+              vers la victoire.
             </p>
 
             <button
               type="button"
-              onClick={fermerRevelationEquipe}
+              onClick={
+                fermerRevelationEquipe
+              }
               style={{
                 width: "100%",
                 maxWidth: 360,
-                marginTop: 30,
+                marginTop: 27,
                 padding: "15px 18px",
+
                 border:
-                  "1px solid rgba(196, 181, 253, 0.45)",
+                  "1px solid rgba(255,255,255,0.34)",
+
                 borderRadius: 14,
                 color: "white",
+
                 background:
-                  "linear-gradient(135deg, #7c3aed, #4f46e5)",
+                  "linear-gradient(135deg, #8b5cf6 0%, #4f46e5 55%, #2563eb 100%)",
+
                 boxShadow:
-                  "0 16px 40px rgba(76, 29, 149, 0.38)",
+                  "0 17px 42px rgba(37, 99, 235, 0.34), inset 0 1px 0 rgba(255,255,255,0.22)",
+
                 fontSize: 16,
                 fontWeight: 900,
                 cursor: "pointer",
+
+                animation:
+                  "arriveeBouton 0.7s 1.95s ease both",
               }}
             >
-              Découvrir mon équipe
+              C’est parti ! 🚀
             </button>
+
+            <div
+              style={{
+                marginTop: 11,
+                color:
+                  "rgba(203, 213, 225, 0.72)",
+                fontSize: 11,
+
+                animation:
+                  "arriveeTexte 0.7s 2.1s ease both",
+              }}
+            >
+              Cet écran se fermera
+              automatiquement.
+            </div>
           </section>
         </div>
       )}
@@ -943,20 +1382,28 @@ export default function Dashboard() {
             top: 16,
             left: "50%",
             zIndex: 2000,
+
             width:
               "calc(100% - 28px)",
+
             maxWidth: 520,
             padding: "13px 15px",
+
             border:
               "1px solid rgba(34, 197, 94, 0.35)",
+
             borderRadius: 13,
             color: "#f0fdf4",
+
             background:
               "rgba(20, 83, 45, 0.98)",
+
             boxShadow:
               "0 12px 35px rgba(0, 0, 0, 0.3)",
+
             transform:
               "translateX(-50%)",
+
             animation:
               "olympiadesNotification 0.3s ease",
           }}
@@ -995,30 +1442,186 @@ export default function Dashboard() {
             }
           }
 
-          @keyframes apparitionEquipe {
-            from {
-              opacity: 0;
-            }
-
-            to {
-              opacity: 1;
-            }
-          }
-
-          @keyframes drapeauEquipe {
+          @keyframes ouvertureRevelation {
             0% {
               opacity: 0;
-              transform: scale(0.25) rotate(-8deg);
-            }
-
-            70% {
-              opacity: 1;
-              transform: scale(1.08) rotate(2deg);
+              transform: scale(1.08);
             }
 
             100% {
               opacity: 1;
-              transform: scale(1) rotate(0);
+              transform: scale(1);
+            }
+          }
+
+          @keyframes rotationRayons {
+            from {
+              transform: rotate(0deg);
+            }
+
+            to {
+              transform: rotate(360deg);
+            }
+          }
+
+          @keyframes pulsationCercle {
+            0%,
+            100% {
+              opacity: 0.3;
+              transform: translate(-50%, -50%) scale(0.94);
+            }
+
+            50% {
+              opacity: 0.65;
+              transform: translate(-50%, -50%) scale(1.04);
+            }
+          }
+
+          @keyframes pulsationCercleDeux {
+            0%,
+            100% {
+              opacity: 0.25;
+              transform: translate(-50%, -50%) scale(1.04);
+            }
+
+            50% {
+              opacity: 0.7;
+              transform: translate(-50%, -50%) scale(0.94);
+            }
+          }
+
+          @keyframes chuteConfetti {
+            0% {
+              opacity: 0;
+              transform: translate3d(0, -40px, 0) rotate(0deg);
+            }
+
+            8% {
+              opacity: 1;
+            }
+
+            100% {
+              opacity: 0.9;
+              transform:
+                translate3d(
+                  var(--derive-confetti),
+                  112vh,
+                  0
+                )
+                rotate(900deg);
+            }
+          }
+
+          @keyframes arriveeBadge {
+            0% {
+              opacity: 0;
+              transform: translateY(-18px) scale(0.9);
+            }
+
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+
+          @keyframes arriveeTexte {
+            0% {
+              opacity: 0;
+              transform: translateY(18px);
+            }
+
+            100% {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          @keyframes revelationDrapeau {
+            0% {
+              opacity: 0;
+              transform: scale(0.05) rotate(-22deg);
+            }
+
+            52% {
+              opacity: 1;
+              transform: scale(1.18) rotate(5deg);
+            }
+
+            72% {
+              transform: scale(0.93) rotate(-2deg);
+            }
+
+            88% {
+              transform: scale(1.05) rotate(1deg);
+            }
+
+            100% {
+              opacity: 1;
+              transform: scale(1) rotate(0deg);
+            }
+          }
+
+          @keyframes haloDrapeau {
+            0%,
+            100% {
+              opacity: 0.45;
+              transform: scale(0.88);
+            }
+
+            50% {
+              opacity: 1;
+              transform: scale(1.12);
+            }
+          }
+
+          @keyframes revelationNom {
+            0% {
+              opacity: 0;
+              transform: translateY(28px) scale(0.75);
+              letter-spacing: 0.22em;
+            }
+
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+              letter-spacing: 0.025em;
+            }
+          }
+
+          @keyframes agrandissementLigne {
+            0% {
+              opacity: 0;
+              transform: scaleX(0);
+            }
+
+            100% {
+              opacity: 1;
+              transform: scaleX(1);
+            }
+          }
+
+          @keyframes arriveeBouton {
+            0% {
+              opacity: 0;
+              transform: translateY(25px) scale(0.94);
+            }
+
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+
+          @keyframes etoileBrillante {
+            0%,
+            100% {
+              opacity: 0.25;
+              transform: scale(0.55);
+            }
+
+            50% {
+              opacity: 1;
+              transform: scale(1.35);
             }
           }
         `}
@@ -1054,12 +1657,13 @@ export default function Dashboard() {
               <p
                 style={{
                   margin: 0,
-                  color:
-                    couleurs.violet,
+                  color: couleurs.violet,
                   fontSize: 12,
                   fontWeight: 900,
+
                   letterSpacing:
                     "0.08em",
+
                   textTransform:
                     "uppercase",
                 }}
@@ -1070,8 +1674,10 @@ export default function Dashboard() {
               <h1
                 style={{
                   margin: "5px 0 0",
+
                   fontSize:
                     "clamp(27px, 7vw, 40px)",
+
                   lineHeight: 1.08,
                 }}
               >
@@ -1083,11 +1689,13 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={basculerSons}
+
               title={
                 sonsActifs
                   ? "Désactiver les sons"
                   : "Activer les sons"
               }
+
               style={{
                 display: "grid",
                 width: 40,
@@ -1095,14 +1703,19 @@ export default function Dashboard() {
                 flexShrink: 0,
                 placeItems: "center",
                 padding: 0,
+
                 border:
                   "1px solid rgba(148, 163, 184, 0.18)",
+
                 borderRadius: 11,
+
                 color: sonsActifs
                   ? couleurs.violetClair
                   : couleurs.secondaire,
+
                 background:
                   couleurs.carte,
+
                 cursor: "pointer",
               }}
             >
@@ -1119,13 +1732,18 @@ export default function Dashboard() {
           <section
             style={{
               ...styleCarte,
+
               display: "grid",
+
               gridTemplateColumns:
                 "minmax(0, 1fr) auto",
+
               alignItems: "center",
               gap: 14,
               padding: "14px 16px",
+
               ...styleAnimation,
+
               ...(animationEquipe
                 ? styleRebond
                 : {}),
@@ -1159,10 +1777,11 @@ export default function Dashboard() {
                     display: "block",
                     overflow: "hidden",
                     fontSize: 18,
+
                     textOverflow:
                       "ellipsis",
-                    whiteSpace:
-                      "nowrap",
+
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {monEquipe.name}
@@ -1174,8 +1793,10 @@ export default function Dashboard() {
                     alignItems: "center",
                     gap: 5,
                     marginTop: 3,
+
                     color:
                       couleurs.secondaire,
+
                     fontSize: 12,
                   }}
                 >
@@ -1209,7 +1830,9 @@ export default function Dashboard() {
                 style={{
                   color:
                     couleurs.secondaire,
+
                   fontSize: 10,
+
                   textTransform:
                     "uppercase",
                 }}
@@ -1232,8 +1855,10 @@ export default function Dashboard() {
             <p
               style={{
                 margin: "4px 0 0",
+
                 color:
                   couleurs.secondaire,
+
                 fontSize: 13,
               }}
             >
@@ -1253,6 +1878,7 @@ export default function Dashboard() {
           <div
             style={{
               display: "grid",
+
               gridTemplateColumns:
                 "repeat(2, minmax(0, 1fr))",
             }}
@@ -1263,8 +1889,11 @@ export default function Dashboard() {
                 alignItems: "center",
                 gap: 10,
                 padding: "13px 14px",
+
                 borderRight: `1px solid ${couleurs.bordure}`,
+
                 ...styleAnimation,
+
                 ...(animationPoints
                   ? styleRebond
                   : {}),
@@ -1273,6 +1902,7 @@ export default function Dashboard() {
               <Star
                 size={20}
                 color="#fde047"
+
                 fill="rgba(250, 204, 21, 0.18)"
               />
 
@@ -1291,6 +1921,7 @@ export default function Dashboard() {
                   style={{
                     color:
                       couleurs.secondaire,
+
                     fontSize: 11,
                   }}
                 >
@@ -1305,7 +1936,9 @@ export default function Dashboard() {
                 alignItems: "center",
                 gap: 10,
                 padding: "13px 14px",
+
                 ...styleAnimation,
+
                 ...(animationVictoires
                   ? styleRebond
                   : {}),
@@ -1313,6 +1946,7 @@ export default function Dashboard() {
             >
               <Trophy
                 size={20}
+
                 color={
                   couleurs.violetClair
                 }
@@ -1332,6 +1966,7 @@ export default function Dashboard() {
                     style={{
                       color:
                         couleurs.secondaire,
+
                       fontSize: 12,
                     }}
                   >
@@ -1343,6 +1978,7 @@ export default function Dashboard() {
                   style={{
                     color:
                       couleurs.secondaire,
+
                     fontSize: 11,
                   }}
                 >
@@ -1365,11 +2001,16 @@ export default function Dashboard() {
               display: "flex",
               alignItems: "center",
               gap: 7,
+
               color:
                 couleurs.violetClair,
+
               fontSize: 11,
               fontWeight: 900,
-              letterSpacing: "0.06em",
+
+              letterSpacing:
+                "0.06em",
+
               textTransform:
                 "uppercase",
             }}
@@ -1381,8 +2022,10 @@ export default function Dashboard() {
           <div
             style={{
               display: "grid",
+
               gridTemplateColumns:
                 "minmax(0, 1fr) auto",
+
               alignItems: "center",
               gap: 12,
               marginTop: 10,
@@ -1398,8 +2041,10 @@ export default function Dashboard() {
                   display: "block",
                   overflow: "hidden",
                   fontSize: 16,
+
                   textOverflow:
                     "ellipsis",
+
                   whiteSpace: "nowrap",
                 }}
               >
@@ -1411,11 +2056,15 @@ export default function Dashboard() {
                 style={{
                   marginTop: 3,
                   overflow: "hidden",
+
                   color:
                     couleurs.secondaire,
+
                   fontSize: 12,
+
                   textOverflow:
                     "ellipsis",
+
                   whiteSpace: "nowrap",
                 }}
               >
@@ -1443,23 +2092,31 @@ export default function Dashboard() {
 
           <button
             type="button"
+
             onClick={() =>
               navigate("/defis")
             }
+
             style={{
               display: "flex",
               width: "100%",
               alignItems: "center",
+
               justifyContent:
                 "space-between",
+
               marginTop: 12,
               padding: "10px 0 0",
               border: 0,
+
               borderTop: `1px solid ${couleurs.bordure}`,
+
               color:
                 couleurs.violetClair,
+
               background:
                 "transparent",
+
               fontWeight: 800,
               cursor: "pointer",
             }}
@@ -1483,12 +2140,16 @@ export default function Dashboard() {
                 alignItems: "center",
                 gap: 7,
                 marginBottom: 9,
+
                 color:
                   couleurs.secondaire,
+
                 fontSize: 11,
                 fontWeight: 900,
+
                 letterSpacing:
                   "0.06em",
+
                 textTransform:
                   "uppercase",
               }}
@@ -1502,15 +2163,20 @@ export default function Dashboard() {
                 (membre, index) => (
                   <div
                     key={membre.id}
+
                     style={{
                       display: "flex",
+
                       alignItems:
                         "center",
+
                       justifyContent:
                         "space-between",
+
                       gap: 10,
                       minHeight: 38,
                       padding: "7px 0",
+
                       borderTop:
                         index === 0
                           ? "none"
@@ -1522,10 +2188,13 @@ export default function Dashboard() {
                         minWidth: 0,
                         overflow:
                           "hidden",
+
                         fontSize: 14,
                         fontWeight: 700,
+
                         textOverflow:
                           "ellipsis",
+
                         whiteSpace:
                           "nowrap",
                       }}
@@ -1561,23 +2230,35 @@ export default function Dashboard() {
         <button
           type="button"
           onClick={seDeconnecter}
-          disabled={deconnexionEnCours}
+          disabled={
+            deconnexionEnCours
+          }
+
           style={{
             width: "100%",
             marginTop: 13,
             padding: 11,
+
             border:
               "1px solid rgba(148, 163, 184, 0.16)",
+
             borderRadius: 11,
+
             color:
               couleurs.secondaire,
-            background: "transparent",
-            cursor: deconnexionEnCours
-              ? "not-allowed"
-              : "pointer",
-            opacity: deconnexionEnCours
-              ? 0.55
-              : 1,
+
+            background:
+              "transparent",
+
+            cursor:
+              deconnexionEnCours
+                ? "not-allowed"
+                : "pointer",
+
+            opacity:
+              deconnexionEnCours
+                ? 0.55
+                : 1,
           }}
         >
           {deconnexionEnCours
