@@ -652,28 +652,48 @@ export default function Dashboard() {
     const playerId =
       sessionStorage.getItem("player_id");
 
-    if (playerId) {
-      const { error } = await supabase.rpc(
-        "logout_player",
-        {
-          p_player_id: Number(playerId),
-        }
+    if (!playerId) {
+      sessionStorage.removeItem("player_id");
+      sessionStorage.removeItem("player_token");
+      navigate("/");
+      return;
+    }
+
+    const { data, error } = await supabase.rpc(
+      "logout_player_simple",
+      {
+        p_player_id: Number(playerId),
+      }
+    );
+
+    if (error) {
+      console.error(
+        "Erreur logout_player_simple :",
+        error
       );
 
-      if (error) {
-        console.error(
-          "Erreur pendant la déconnexion :",
-          error
-        );
+      setDeconnexionEnCours(false);
 
-        setDeconnexionEnCours(false);
+      alert(
+        `La déconnexion n’a pas fonctionné : ${error.message}`
+      );
 
-        alert(
-          "La déconnexion n’a pas fonctionné. Réessaie."
-        );
+      return;
+    }
 
-        return;
-      }
+    if (data !== true) {
+      console.error(
+        "Résultat inattendu de logout_player_simple :",
+        data
+      );
+
+      setDeconnexionEnCours(false);
+
+      alert(
+        "Supabase n’a pas confirmé la déconnexion."
+      );
+
+      return;
     }
 
     sessionStorage.removeItem("player_id");
