@@ -652,15 +652,11 @@ export default function Dashboard() {
     const playerId =
       sessionStorage.getItem("player_id");
 
-    const playerToken =
-      sessionStorage.getItem("player_token");
-
-    if (playerId && playerToken) {
+    if (playerId) {
       const { error } = await supabase.rpc(
         "logout_player",
         {
           p_player_id: Number(playerId),
-          p_token: playerToken,
         }
       );
 
@@ -673,7 +669,7 @@ export default function Dashboard() {
         setDeconnexionEnCours(false);
 
         alert(
-          "La déconnexion n’a pas pu être effectuée. Réessaie."
+          "La déconnexion n’a pas fonctionné. Réessaie."
         );
 
         return;
