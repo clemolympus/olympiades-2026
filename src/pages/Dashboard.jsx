@@ -660,7 +660,7 @@ export default function Dashboard() {
     }
 
     const { data, error } = await supabase.rpc(
-      "logout_player_simple",
+      "logout_player",
       {
         p_player_id: Number(playerId),
       }
@@ -668,7 +668,7 @@ export default function Dashboard() {
 
     if (error) {
       console.error(
-        "Erreur logout_player_simple :",
+        "Erreur logout_player :",
         error
       );
 
@@ -683,7 +683,7 @@ export default function Dashboard() {
 
     if (data !== true) {
       console.error(
-        "Résultat inattendu de logout_player_simple :",
+        "Résultat inattendu de logout_player :",
         data
       );
 
