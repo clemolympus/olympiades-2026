@@ -1,4 +1,8 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabase";
 
@@ -12,8 +16,11 @@ export default function Login() {
   const [joueurChoisi, setJoueurChoisi] = useState(null);
   const [motDePasse, setMotDePasse] = useState("");
   const [chargement, setChargement] = useState(true);
-  const [connexionEnCours, setConnexionEnCours] = useState(false);
+  const [connexionEnCours, setConnexionEnCours] =
+    useState(false);
   const [erreur, setErreur] = useState("");
+
+  const connexionVerrouillee = useRef(false);
 
   useEffect(() => {
     chargerJoueurs();
@@ -23,11 +30,20 @@ export default function Login() {
     setChargement(true);
     setErreur("");
 
-    const { data, error } = await supabase.rpc("list_profiles");
+    const { data, error } = await supabase.rpc(
+      "list_profiles"
+    );
 
     if (error) {
-      console.error(error);
-      setErreur("Impossible de charger les joueurs.");
+      console.error(
+        "Erreur pendant le chargement des profils :",
+        error
+      );
+
+      setErreur(
+        "Impossible de charger les joueurs."
+      );
+
       setChargement(false);
       return;
     }
@@ -37,44 +53,111 @@ export default function Login() {
   }
 
   async function connecter() {
+    if (connexionVerrouillee.current) {
+      return;
+    }
+
     if (!joueurChoisi) {
       setErreur("Choisis ton profil.");
       return;
     }
 
-    if (!motDePasse) {
+    if (!motDePasse.trim()) {
       setErreur("Entre ton mot de passe.");
       return;
     }
 
+    connexionVerrouillee.current = true;
     setConnexionEnCours(true);
     setErreur("");
 
-    const { data, error } = await supabase.rpc("login_player", {
-      p_player_id: joueurChoisi.id,
-      p_password: motDePasse,
-    });
+    try {
+      const { data, error } = await supabase.rpc(
+        "login_player",
+        {
+          p_player_id: Number(joueurChoisi.id),
+          p_password: motDePasse,
+        }
+      );
 
-    setConnexionEnCours(false);
+      if (error) {
+        console.error(
+          "Erreur pendant la connexion :",
+          error
+        );
 
-    if (error) {
-      console.error(error);
-      setErreur(error.message);
+        setErreur(
+          error.message ||
+            "La connexion n’a pas fonctionné."
+        );
+
+        return;
+      }
+
+      if (!data?.token) {
+        console.error(
+          "La fonction login_player n’a pas renvoyé de token :",
+          data
+        );
+
+        setErreur(
+          "La connexion n’a pas pu être confirmée."
+        );
+
+        return;
+      }
+
+      sessionStorage.setItem(
+        "player_id",
+        String(
+          data.player_id ??
+            joueurChoisi.id
+        )
+      );
+
+      sessionStorage.setItem(
+        "player_token",
+        String(data.token)
+      );
+
+      navigate("/tableau-de-bord", {
+        replace: true,
+      });
+    } catch (erreurInattendue) {
+      console.error(
+        "Erreur inattendue pendant la connexion :",
+        erreurInattendue
+      );
+
+      setErreur(
+        "Une erreur inattendue est survenue pendant la connexion."
+      );
+    } finally {
+      connexionVerrouillee.current = false;
+      setConnexionEnCours(false);
+    }
+  }
+
+  function selectionnerJoueur(joueur) {
+    if (connexionEnCours) {
       return;
     }
 
-    if (!data?.token) {
-      setErreur("Mot de passe incorrect.");
+    setJoueurChoisi(joueur);
+    setMotDePasse("");
+    setErreur("");
+  }
+
+  function gererToucheClavier(event) {
+    if (event.key !== "Enter") {
       return;
     }
 
-    sessionStorage.setItem(
-      "player_id",
-      String(data.player_id ?? joueurChoisi.id)
-    );
-    sessionStorage.setItem("player_token", data.token);
+    event.preventDefault();
 
-    navigate("/tableau-de-bord");
+    if (!connexionEnCours) {
+      connecter();
+    }
   }
 
   if (chargement) {
@@ -142,7 +225,8 @@ export default function Login() {
           <h1
             style={{
               margin: "8px 0 7px",
-              fontSize: "clamp(34px, 8vw, 52px)",
+              fontSize:
+                "clamp(34px, 8vw, 52px)",
               lineHeight: 1,
             }}
           >
@@ -155,19 +239,23 @@ export default function Login() {
               color: "#aeb8cb",
             }}
           >
-            Choisis ton profil puis entre ton mot de passe.
+            Choisis ton profil puis entre ton
+            mot de passe.
           </p>
         </header>
 
         {erreur && (
           <div
+            role="alert"
             style={{
               padding: 14,
               marginTop: 22,
-              border: "1px solid rgba(248, 113, 113, 0.35)",
+              border:
+                "1px solid rgba(248, 113, 113, 0.35)",
               borderRadius: 14,
               color: "#fca5a5",
-              background: "rgba(127, 29, 29, 0.2)",
+              background:
+                "rgba(127, 29, 29, 0.2)",
               textAlign: "center",
             }}
           >
@@ -175,7 +263,11 @@ export default function Login() {
           </div>
         )}
 
-        <section style={{ marginTop: 28 }}>
+        <section
+          style={{
+            marginTop: 28,
+          }}
+        >
           <div
             style={{
               marginBottom: 12,
@@ -191,8 +283,14 @@ export default function Login() {
 
           {joueurs.length === 0 ? (
             <Card>
-              <p style={{ margin: 0, color: "#cbd5e1" }}>
-                Aucun joueur inscrit pour le moment.
+              <p
+                style={{
+                  margin: 0,
+                  color: "#cbd5e1",
+                }}
+              >
+                Aucun joueur inscrit pour le
+                moment.
               </p>
             </Card>
           ) : (
@@ -206,26 +304,31 @@ export default function Login() {
             >
               {joueurs.map((joueur) => {
                 const selectionne =
-                  Number(joueurChoisi?.id) === Number(joueur.id);
+                  Number(joueurChoisi?.id) ===
+                  Number(joueur.id);
 
                 return (
                   <button
                     key={joueur.id}
                     type="button"
-                    onClick={() => {
-                      setJoueurChoisi(joueur);
-                      setMotDePasse("");
-                      setErreur("");
-                    }}
+                    onClick={() =>
+                      selectionnerJoueur(joueur)
+                    }
+                    disabled={connexionEnCours}
                     style={{
                       minHeight: 120,
                       padding: 0,
                       border: 0,
                       borderRadius: 18,
                       color: "#f8fafc",
-                      cursor: "pointer",
+                      cursor: connexionEnCours
+                        ? "not-allowed"
+                        : "pointer",
                       textAlign: "left",
                       background: "transparent",
+                      opacity: connexionEnCours
+                        ? 0.7
+                        : 1,
                     }}
                   >
                     <Card
@@ -258,22 +361,28 @@ export default function Login() {
                             height: 46,
                             flexShrink: 0,
                             borderRadius: 14,
-                            background: selectionne
-                              ? "rgba(255, 255, 255, 0.16)"
-                              : "rgba(139, 92, 246, 0.14)",
+                            background:
+                              selectionne
+                                ? "rgba(255, 255, 255, 0.16)"
+                                : "rgba(139, 92, 246, 0.14)",
                             fontSize: 24,
                           }}
                         >
                           👤
                         </div>
 
-                        <div style={{ minWidth: 0 }}>
+                        <div
+                          style={{
+                            minWidth: 0,
+                          }}
+                        >
                           <strong
                             style={{
                               display: "block",
                               overflow: "hidden",
                               fontSize: 18,
-                              textOverflow: "ellipsis",
+                              textOverflow:
+                                "ellipsis",
                               whiteSpace: "nowrap",
                             }}
                           >
@@ -289,8 +398,10 @@ export default function Login() {
                                   ? "#ede9fe"
                                   : "#aeb8cb",
                                 fontSize: 13,
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
+                                textOverflow:
+                                  "ellipsis",
+                                whiteSpace:
+                                  "nowrap",
                               }}
                             >
                               “{joueur.nickname}”
@@ -309,7 +420,9 @@ export default function Login() {
                         }}
                       >
                         Niveau sportif :{" "}
-                        <strong>{joueur.sport_level}/4</strong>
+                        <strong>
+                          {joueur.sport_level}/4
+                        </strong>
                       </div>
                     </Card>
                   </button>
@@ -344,7 +457,8 @@ export default function Login() {
                 fontSize: 25,
               }}
             >
-              Bonjour {joueurChoisi.first_name} 👋
+              Bonjour {joueurChoisi.first_name}{" "}
+              👋
             </h2>
 
             <p
@@ -353,7 +467,8 @@ export default function Login() {
                 color: "#aeb8cb",
               }}
             >
-              Entre ton mot de passe pour accéder à ton espace.
+              Entre ton mot de passe pour
+              accéder à ton espace.
             </p>
 
             <input
@@ -361,33 +476,48 @@ export default function Login() {
               placeholder="Mot de passe"
               value={motDePasse}
               onChange={(event) => {
-                setMotDePasse(event.target.value);
+                setMotDePasse(
+                  event.target.value
+                );
+
                 setErreur("");
               }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  connecter();
-                }
-              }}
+              onKeyDown={gererToucheClavier}
+              disabled={connexionEnCours}
               autoFocus
+              autoComplete="current-password"
               style={{
                 boxSizing: "border-box",
                 display: "block",
                 width: "100%",
                 padding: "14px 15px",
-                border: "1px solid rgba(148, 163, 184, 0.24)",
+                border:
+                  "1px solid rgba(148, 163, 184, 0.24)",
                 borderRadius: 13,
                 outline: "none",
                 color: "#f8fafc",
                 fontSize: 16,
-                background: "rgba(2, 6, 23, 0.52)",
+                background:
+                  "rgba(2, 6, 23, 0.52)",
+                opacity: connexionEnCours
+                  ? 0.7
+                  : 1,
               }}
             />
 
             <PrimaryButton
+              type="button"
               onClick={connecter}
               disabled={connexionEnCours}
-              style={{ marginTop: 16 }}
+              style={{
+                marginTop: 16,
+                opacity: connexionEnCours
+                  ? 0.65
+                  : 1,
+                cursor: connexionEnCours
+                  ? "not-allowed"
+                  : "pointer",
+              }}
             >
               {connexionEnCours
                 ? "Connexion..."
@@ -398,7 +528,12 @@ export default function Login() {
 
         <button
           type="button"
-          onClick={() => navigate("/")}
+          onClick={() =>
+            navigate("/", {
+              replace: true,
+            })
+          }
+          disabled={connexionEnCours}
           style={{
             display: "block",
             margin: "24px auto 0",
@@ -406,7 +541,12 @@ export default function Login() {
             border: 0,
             color: "#94a3b8",
             background: "transparent",
-            cursor: "pointer",
+            cursor: connexionEnCours
+              ? "not-allowed"
+              : "pointer",
+            opacity: connexionEnCours
+              ? 0.6
+              : 1,
           }}
         >
           ← Retour à l’accueil
