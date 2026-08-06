@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { Trophy, Users } from "lucide-react";
 import { supabase } from "../services/supabase";
 
 import LivePodium from "../components/LivePodium";
 import BottomNav from "../components/BottomNav";
-import Card from "../components/ui/Card";
 
 export default function Ranking() {
   const [equipes, setEquipes] = useState([]);
@@ -15,7 +15,10 @@ export default function Ranking() {
   useEffect(() => {
     chargerClassements();
 
-    const intervalle = window.setInterval(chargerClassements, 5000);
+    const intervalle = window.setInterval(
+      chargerClassements,
+      5000
+    );
 
     return () => window.clearInterval(intervalle);
   }, []);
@@ -38,35 +41,28 @@ export default function Ranking() {
 
   const classementEquipes = useMemo(() => {
     return [...equipes]
-      .map((equipe) => ({
-        ...equipe,
-        score: Number(equipe.score ?? 0),
-        membres: joueurs
-          .filter(
-            (joueur) =>
-              Number(joueur.team_id) === Number(equipe.id)
-          )
-          .sort((a, b) => {
-            const differencePoints =
-              Number(b.points ?? 0) - Number(a.points ?? 0);
+      .map((equipe) => {
+        const membres = joueurs.filter(
+          (joueur) =>
+            Number(joueur.team_id) === Number(equipe.id)
+        );
 
-            if (differencePoints !== 0) {
-              return differencePoints;
-            }
+        const capitaine = membres.find(
+          (joueur) => joueur.is_captain
+        );
 
-            if (a.is_captain && !b.is_captain) return -1;
-            if (!a.is_captain && b.is_captain) return 1;
-
-            return String(a.first_name).localeCompare(
-              String(b.first_name),
-              "fr"
-            );
-          }),
-      }))
+        return {
+          ...equipe,
+          score: Number(equipe.score ?? 0),
+          capitaine,
+        };
+      })
       .sort((a, b) => {
         const ecart = b.score - a.score;
 
-        if (ecart !== 0) return ecart;
+        if (ecart !== 0) {
+          return ecart;
+        }
 
         return (
           Number(a.sort_order ?? 0) -
@@ -80,12 +76,9 @@ export default function Ranking() {
       const ecartPoints =
         Number(b.points ?? 0) - Number(a.points ?? 0);
 
-      if (ecartPoints !== 0) return ecartPoints;
-
-      const ecartVictoires =
-        Number(b.wins ?? 0) - Number(a.wins ?? 0);
-
-      if (ecartVictoires !== 0) return ecartVictoires;
+      if (ecartPoints !== 0) {
+        return ecartPoints;
+      }
 
       return String(a.first_name).localeCompare(
         String(b.first_name),
@@ -94,30 +87,39 @@ export default function Ranking() {
     });
   }, [joueurs]);
 
-  const meilleurScoreEquipe = Math.max(
-    ...classementEquipes.map((equipe) => equipe.score),
-    1
-  );
-
-  const meilleurScoreJoueur = Math.max(
-    ...classementJoueurs.map((joueur) =>
-      Number(joueur.points ?? 0)
-    ),
-    1
-  );
-
   function nomDuJoueur(joueur) {
+    if (!joueur) {
+      return "";
+    }
+
     return joueur.nickname
       ? `${joueur.first_name} — ${joueur.nickname}`
       : joueur.first_name;
   }
 
-  function medaille(index) {
-    if (index === 0) return "🥇";
-    if (index === 1) return "🥈";
-    if (index === 2) return "🥉";
-    return `${index + 1}.`;
+  function position(index) {
+    return index + 1;
   }
+
+  function couleurPosition(index) {
+    if (index === 0) return "#facc15";
+    if (index === 1) return "#d1d5db";
+    if (index === 2) return "#fb923c";
+
+    return "#94a3b8";
+  }
+
+  const styleLigne = {
+    display: "grid",
+    gridTemplateColumns: "38px minmax(0, 1fr) auto",
+    alignItems: "center",
+    gap: 10,
+    minHeight: 56,
+    padding: "9px 13px",
+    border: "1px solid rgba(148, 163, 184, 0.14)",
+    borderRadius: 12,
+    background: "rgba(15, 23, 42, 0.82)",
+  };
 
   if (chargement) {
     return (
@@ -138,21 +140,21 @@ export default function Ranking() {
     <main
       style={{
         minHeight: "100vh",
-        padding: "18px 18px 105px",
+        padding: "18px 14px 105px",
         color: "#f8fafc",
         background:
           "radial-gradient(circle at top, #17164f 0%, #080d20 40%, #020617 100%)",
       }}
     >
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+      <div style={{ maxWidth: 760, margin: "0 auto" }}>
         <LivePodium />
 
-        <header style={{ margin: "26px 0 22px" }}>
+        <header style={{ margin: "22px 0 18px" }}>
           <p
             style={{
               margin: 0,
               color: "#8b5cf6",
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: 900,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
@@ -163,25 +165,33 @@ export default function Ranking() {
 
           <h1
             style={{
-              margin: "8px 0 5px",
-              fontSize: "clamp(32px, 7vw, 48px)",
+              margin: "6px 0 4px",
+              fontSize: "clamp(28px, 7vw, 42px)",
+              lineHeight: 1.05,
             }}
           >
-            Classement 🏆
+            Classement
           </h1>
 
-          <p style={{ margin: 0, color: "#aeb8cb" }}>
-            Suis les scores des équipes et des joueurs en direct.
+          <p
+            style={{
+              margin: 0,
+              color: "#94a3b8",
+              fontSize: 14,
+            }}
+          >
+            Scores mis à jour automatiquement.
           </p>
         </header>
 
         {erreur && (
           <div
             style={{
-              padding: 15,
-              marginBottom: 18,
-              border: "1px solid rgba(248, 113, 113, 0.35)",
-              borderRadius: 14,
+              padding: 13,
+              marginBottom: 14,
+              border:
+                "1px solid rgba(248, 113, 113, 0.35)",
+              borderRadius: 12,
               color: "#fca5a5",
               background: "rgba(127, 29, 29, 0.18)",
             }}
@@ -194,10 +204,11 @@ export default function Ranking() {
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
-            gap: 7,
-            padding: 6,
-            border: "1px solid rgba(148, 163, 184, 0.14)",
-            borderRadius: 15,
+            gap: 6,
+            padding: 5,
+            border:
+              "1px solid rgba(148, 163, 184, 0.14)",
+            borderRadius: 13,
             background: "rgba(15, 23, 42, 0.82)",
           }}
         >
@@ -205,16 +216,23 @@ export default function Ranking() {
             type="button"
             onClick={() => setOnglet("equipes")}
             style={{
-              padding: 13,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 7,
+              minHeight: 42,
+              padding: "9px 8px",
               border:
                 onglet === "equipes"
                   ? "1px solid rgba(139, 92, 246, 0.5)"
                   : "1px solid transparent",
-              borderRadius: 11,
+              borderRadius: 9,
               color:
-                onglet === "equipes" ? "#f8fafc" : "#94a3b8",
-              fontSize: 15,
-              fontWeight: 900,
+                onglet === "equipes"
+                  ? "#ffffff"
+                  : "#94a3b8",
+              fontSize: 14,
+              fontWeight: 800,
               cursor: "pointer",
               background:
                 onglet === "equipes"
@@ -222,23 +240,31 @@ export default function Ranking() {
                   : "transparent",
             }}
           >
-            🏆 Équipes
+            <Trophy size={18} />
+            Équipes
           </button>
 
           <button
             type="button"
             onClick={() => setOnglet("joueurs")}
             style={{
-              padding: 13,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 7,
+              minHeight: 42,
+              padding: "9px 8px",
               border:
                 onglet === "joueurs"
                   ? "1px solid rgba(139, 92, 246, 0.5)"
                   : "1px solid transparent",
-              borderRadius: 11,
+              borderRadius: 9,
               color:
-                onglet === "joueurs" ? "#f8fafc" : "#94a3b8",
-              fontSize: 15,
-              fontWeight: 900,
+                onglet === "joueurs"
+                  ? "#ffffff"
+                  : "#94a3b8",
+              fontSize: 14,
+              fontWeight: 800,
               cursor: "pointer",
               background:
                 onglet === "joueurs"
@@ -246,331 +272,211 @@ export default function Ranking() {
                   : "transparent",
             }}
           >
-            👤 Joueurs
+            <Users size={18} />
+            Joueurs
           </button>
         </div>
 
         {onglet === "equipes" && (
-          <section style={{ marginTop: 20 }}>
-            <div style={{ display: "grid", gap: 15 }}>
-              {classementEquipes.map((equipe, index) => {
-                const largeur =
-                  meilleurScoreEquipe === 0
-                    ? 0
-                    : (equipe.score / meilleurScoreEquipe) * 100;
-
-                return (
-                  <Card
-                    key={equipe.id}
+          <section style={{ marginTop: 14 }}>
+            <div style={{ display: "grid", gap: 7 }}>
+              {classementEquipes.map((equipe, index) => (
+                <article
+                  key={equipe.id}
+                  style={{
+                    ...styleLigne,
+                    border:
+                      index === 0
+                        ? "1px solid rgba(250, 204, 21, 0.35)"
+                        : styleLigne.border,
+                    background:
+                      index === 0
+                        ? "linear-gradient(110deg, rgba(120, 53, 15, 0.2), rgba(15, 23, 42, 0.9))"
+                        : styleLigne.background,
+                  }}
+                >
+                  <div
                     style={{
-                      padding: 0,
-                      overflow: "hidden",
-                      border:
-                        index === 0
-                          ? "1px solid rgba(250, 204, 21, 0.45)"
-                          : "1px solid rgba(148, 163, 184, 0.16)",
-                      background:
-                        index === 0
-                          ? "linear-gradient(145deg, rgba(120, 53, 15, 0.23), rgba(15, 23, 42, 0.98))"
-                          : "linear-gradient(145deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.98))",
+                      display: "grid",
+                      width: 30,
+                      height: 30,
+                      placeItems: "center",
+                      borderRadius: 9,
+                      color: couleurPosition(index),
+                      background: "rgba(255, 255, 255, 0.05)",
+                      fontSize: 15,
+                      fontWeight: 900,
                     }}
                   >
-                    <div style={{ padding: 20 }}>
-                      <div
+                    {position(index)}
+                  </div>
+
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        minWidth: 0,
+                      }}
+                    >
+                      <span
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 16,
+                          flexShrink: 0,
+                          fontSize: 23,
+                          lineHeight: 1,
                         }}
                       >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 14,
-                            minWidth: 0,
-                          }}
-                        >
-                          <strong
-                            style={{
-                              flexShrink: 0,
-                              fontSize: 27,
-                            }}
-                          >
-                            {medaille(index)}
-                          </strong>
+                        {equipe.flag}
+                      </span>
 
-                          <span
-                            style={{
-                              flexShrink: 0,
-                              fontSize: 38,
-                            }}
-                          >
-                            {equipe.flag}
-                          </span>
-
-                          <div style={{ minWidth: 0 }}>
-                            <h2
-                              style={{
-                                margin: 0,
-                                overflow: "hidden",
-                                fontSize: 23,
-                                textOverflow: "ellipsis",
-                                textTransform: "uppercase",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {equipe.name}
-                            </h2>
-
-                            <div
-                              style={{
-                                marginTop: 4,
-                                color: "#94a3b8",
-                                fontSize: 13,
-                              }}
-                            >
-                              {equipe.membres.length} joueur
-                              {equipe.membres.length > 1 ? "s" : ""}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
-                            flexShrink: 0,
-                            textAlign: "right",
-                          }}
-                        >
-                          <strong
-                            style={{
-                              display: "block",
-                              color:
-                                index === 0 ? "#fde047" : "#f8fafc",
-                              fontSize: 29,
-                            }}
-                          >
-                            {equipe.score}
-                          </strong>
-
-                          <span
-                            style={{
-                              color: "#94a3b8",
-                              fontSize: 12,
-                              fontWeight: 800,
-                              textTransform: "uppercase",
-                            }}
-                          >
-                            Point{equipe.score > 1 ? "s" : ""}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div
+                      <strong
                         style={{
-                          height: 8,
-                          marginTop: 17,
                           overflow: "hidden",
-                          borderRadius: 999,
-                          background: "rgba(148, 163, 184, 0.13)",
+                          fontSize: 16,
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        <div
-                          style={{
-                            width: `${largeur}%`,
-                            height: "100%",
-                            borderRadius: 999,
-                            background:
-                              index === 0
-                                ? "linear-gradient(90deg, #facc15, #f97316)"
-                                : "linear-gradient(90deg, #7c3aed, #3b82f6)",
-                            transition: "width 0.4s ease",
-                          }}
-                        />
-                      </div>
+                        {equipe.name}
+                      </strong>
+                    </div>
 
+                    {equipe.capitaine && (
                       <div
                         style={{
-                          display: "grid",
-                          gap: 8,
-                          marginTop: 17,
+                          marginTop: 3,
+                          overflow: "hidden",
+                          color: "#94a3b8",
+                          fontSize: 11,
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        {equipe.membres.map((joueur) => (
-                          <div
-                            key={joueur.id}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: 12,
-                              padding: "10px 12px",
-                              borderRadius: 11,
-                              background: "rgba(255, 255, 255, 0.04)",
-                            }}
-                          >
-                            <div
-                              style={{
-                                minWidth: 0,
-                                overflow: "hidden",
-                                fontWeight: 800,
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {joueur.is_captain && "👑 "}
-                              {nomDuJoueur(joueur)}
-                            </div>
-
-                            <strong
-                              style={{
-                                flexShrink: 0,
-                                color: "#c4b5fd",
-                              }}
-                            >
-                              ⭐ {Number(joueur.points ?? 0)}
-                            </strong>
-                          </div>
-                        ))}
+                        Capitaine :{" "}
+                        {nomDuJoueur(equipe.capitaine)}
                       </div>
-                    </div>
-                  </Card>
-                );
-              })}
+                    )}
+                  </div>
+
+                  <div
+                    style={{
+                      flexShrink: 0,
+                      textAlign: "right",
+                    }}
+                  >
+                    <strong
+                      style={{
+                        display: "block",
+                        color:
+                          index === 0
+                            ? "#fde047"
+                            : "#f8fafc",
+                        fontSize: 19,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {equipe.score}
+                    </strong>
+
+                    <span
+                      style={{
+                        color: "#94a3b8",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      point{equipe.score > 1 ? "s" : ""}
+                    </span>
+                  </div>
+                </article>
+              ))}
             </div>
           </section>
         )}
 
         {onglet === "joueurs" && (
-          <section style={{ marginTop: 20 }}>
-            <div style={{ display: "grid", gap: 12 }}>
+          <section style={{ marginTop: 14 }}>
+            <div style={{ display: "grid", gap: 6 }}>
               {classementJoueurs.map((joueur, index) => {
                 const points = Number(joueur.points ?? 0);
-                const largeur =
-                  meilleurScoreJoueur === 0
-                    ? 0
-                    : (points / meilleurScoreJoueur) * 100;
 
                 return (
-                  <Card
+                  <article
                     key={joueur.id}
                     style={{
-                      padding: 18,
+                      ...styleLigne,
+                      minHeight: 49,
+                      padding: "7px 13px",
                       border:
                         index === 0
-                          ? "1px solid rgba(250, 204, 21, 0.45)"
-                          : "1px solid rgba(148, 163, 184, 0.16)",
+                          ? "1px solid rgba(250, 204, 21, 0.35)"
+                          : styleLigne.border,
                       background:
                         index === 0
-                          ? "linear-gradient(145deg, rgba(120, 53, 15, 0.23), rgba(15, 23, 42, 0.98))"
-                          : undefined,
+                          ? "linear-gradient(110deg, rgba(120, 53, 15, 0.2), rgba(15, 23, 42, 0.9))"
+                          : styleLigne.background,
                     }}
                   >
                     <div
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 16,
+                        display: "grid",
+                        width: 28,
+                        height: 28,
+                        placeItems: "center",
+                        borderRadius: 8,
+                        color: couleurPosition(index),
+                        background: "rgba(255, 255, 255, 0.05)",
+                        fontSize: 14,
+                        fontWeight: 900,
                       }}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 13,
-                          minWidth: 0,
-                        }}
-                      >
-                        <strong
-                          style={{
-                            flexShrink: 0,
-                            fontSize: 25,
-                          }}
-                        >
-                          {medaille(index)}
-                        </strong>
-
-                        <div style={{ minWidth: 0 }}>
-                          <div
-                            style={{
-                              overflow: "hidden",
-                              fontSize: 18,
-                              fontWeight: 900,
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {joueur.is_captain && "👑 "}
-                            {nomDuJoueur(joueur)}
-                          </div>
-
-                          <div
-                            style={{
-                              marginTop: 5,
-                              color: "#94a3b8",
-                              fontSize: 13,
-                            }}
-                          >
-                            {joueur.flag}{" "}
-                            {joueur.team || "Sans équipe"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          flexShrink: 0,
-                          textAlign: "right",
-                        }}
-                      >
-                        <strong
-                          style={{
-                            display: "block",
-                            color:
-                              index === 0 ? "#fde047" : "#f8fafc",
-                            fontSize: 25,
-                          }}
-                        >
-                          {points}
-                        </strong>
-
-                        <div
-                          style={{
-                            color: "#94a3b8",
-                            fontSize: 12,
-                          }}
-                        >
-                          {Number(joueur.wins ?? 0)}/10 victoire
-                          {Number(joueur.wins ?? 0) > 1 ? "s" : ""}
-                        </div>
-                      </div>
+                      {position(index)}
                     </div>
+
+                    <strong
+                      style={{
+                        minWidth: 0,
+                        overflow: "hidden",
+                        fontSize: 15,
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {nomDuJoueur(joueur)}
+                    </strong>
 
                     <div
                       style={{
-                        height: 6,
-                        marginTop: 15,
-                        overflow: "hidden",
-                        borderRadius: 999,
-                        background: "rgba(148, 163, 184, 0.13)",
+                        flexShrink: 0,
+                        textAlign: "right",
                       }}
                     >
-                      <div
+                      <strong
                         style={{
-                          width: `${largeur}%`,
-                          height: "100%",
-                          borderRadius: 999,
-                          background:
+                          color:
                             index === 0
-                              ? "linear-gradient(90deg, #facc15, #f97316)"
-                              : "linear-gradient(90deg, #7c3aed, #3b82f6)",
-                          transition: "width 0.4s ease",
+                              ? "#fde047"
+                              : "#f8fafc",
+                          fontSize: 18,
                         }}
-                      />
+                      >
+                        {points}
+                      </strong>
+
+                      <span
+                        style={{
+                          marginLeft: 4,
+                          color: "#94a3b8",
+                          fontSize: 10,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        pt{Math.abs(points) > 1 ? "s" : ""}
+                      </span>
                     </div>
-                  </Card>
+                  </article>
                 );
               })}
             </div>
