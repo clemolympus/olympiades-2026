@@ -86,6 +86,17 @@ export default function Dashboard() {
   const minuterieNotification = useRef(null);
   const minuterieRevelation = useRef(null);
 
+  const ecranRevelationRef = useRef(null);
+  const badgeRevelationRef = useRef(null);
+  const texteRevelationRef = useRef(null);
+  const drapeauRevelationRef = useRef(null);
+  const nomRevelationRef = useRef(null);
+  const ligneRevelationRef = useRef(null);
+  const descriptionRevelationRef = useRef(null);
+  const boutonRevelationRef = useRef(null);
+  const confettisRevelationRef = useRef(null);
+  const animationsRevelation = useRef([]);
+
   const confettis = useMemo(() => {
     return Array.from({ length: 90 }, (_, index) => ({
       id: index,
@@ -131,6 +142,165 @@ export default function Dashboard() {
     };
   }, []);
 
+  function demarrerAnimationsRevelation() {
+    animationsRevelation.current.forEach((animation) => {
+      try {
+        animation.cancel();
+      } catch {
+        // Animation déjà terminée.
+      }
+    });
+
+    animationsRevelation.current = [];
+
+    function animer(element, images, options) {
+      if (!element || typeof element.animate !== "function") {
+        return;
+      }
+
+      const animation = element.animate(images, {
+        fill: "both",
+        ...options,
+      });
+
+      animationsRevelation.current.push(animation);
+    }
+
+    animer(
+      ecranRevelationRef.current,
+      [
+        { opacity: 0, transform: "scale(1.08)" },
+        { opacity: 1, transform: "scale(1)" },
+      ],
+      { duration: 650, easing: "ease-out" }
+    );
+
+    animer(
+      badgeRevelationRef.current,
+      [
+        { opacity: 0, transform: "translateY(-22px) scale(0.82)" },
+        { opacity: 1, transform: "translateY(0) scale(1)" },
+      ],
+      { duration: 650, delay: 180, easing: "cubic-bezier(.2,.9,.25,1.15)" }
+    );
+
+    animer(
+      texteRevelationRef.current,
+      [
+        { opacity: 0, transform: "translateY(24px)" },
+        { opacity: 1, transform: "translateY(0)" },
+      ],
+      { duration: 700, delay: 480, easing: "ease-out" }
+    );
+
+    animer(
+      drapeauRevelationRef.current,
+      [
+        { opacity: 0, transform: "scale(0.05) rotate(-24deg)" },
+        { opacity: 1, transform: "scale(1.28) rotate(7deg)", offset: 0.52 },
+        { opacity: 1, transform: "scale(0.88) rotate(-4deg)", offset: 0.72 },
+        { opacity: 1, transform: "scale(1.09) rotate(2deg)", offset: 0.88 },
+        { opacity: 1, transform: "scale(1) rotate(0deg)" },
+      ],
+      {
+        duration: 1350,
+        delay: 850,
+        easing: "cubic-bezier(.16,1.15,.35,1)",
+      }
+    );
+
+    animer(
+      nomRevelationRef.current,
+      [
+        {
+          opacity: 0,
+          transform: "translateY(35px) scale(0.68)",
+          letterSpacing: "0.22em",
+        },
+        {
+          opacity: 1,
+          transform: "translateY(0) scale(1)",
+          letterSpacing: "0.025em",
+        },
+      ],
+      {
+        duration: 800,
+        delay: 1450,
+        easing: "cubic-bezier(.2,.9,.3,1.18)",
+      }
+    );
+
+    animer(
+      ligneRevelationRef.current,
+      [
+        { opacity: 0, transform: "scaleX(0)" },
+        { opacity: 1, transform: "scaleX(1)" },
+      ],
+      { duration: 650, delay: 1750, easing: "ease-out" }
+    );
+
+    animer(
+      descriptionRevelationRef.current,
+      [
+        { opacity: 0, transform: "translateY(20px)" },
+        { opacity: 1, transform: "translateY(0)" },
+      ],
+      { duration: 700, delay: 1900, easing: "ease-out" }
+    );
+
+    animer(
+      boutonRevelationRef.current,
+      [
+        { opacity: 0, transform: "translateY(28px) scale(0.9)" },
+        { opacity: 1, transform: "translateY(0) scale(1)" },
+      ],
+      {
+        duration: 700,
+        delay: 2200,
+        easing: "cubic-bezier(.2,.9,.3,1.12)",
+      }
+    );
+
+    const confettisElements =
+      confettisRevelationRef.current?.querySelectorAll(
+        "[data-confetti-revelation]"
+      ) ?? [];
+
+    confettisElements.forEach((element, index) => {
+      const derive = Number(element.dataset.derive || 0);
+      const rotation = Number(element.dataset.rotation || 0);
+      const duree = Number(element.dataset.duree || 4200);
+      const delai = Number(element.dataset.delai || 0);
+
+      animer(
+        element,
+        [
+          {
+            opacity: 0,
+            transform: `translate3d(0, -50px, 0) rotate(${rotation}deg)`,
+          },
+          { opacity: 1, offset: 0.08 },
+          {
+            opacity: 0.95,
+            transform: `translate3d(${derive}px, 115vh, 0) rotate(${
+              rotation + 900 + index * 4
+            }deg)`,
+          },
+        ],
+        {
+          duration: duree,
+          delay: delai,
+          easing: "cubic-bezier(.2,.65,.35,1)",
+          iterations: Infinity,
+        }
+      );
+    });
+
+    if (navigator.vibrate) {
+      navigator.vibrate([90, 55, 140]);
+    }
+  }
+
   useEffect(() => {
     if (!equipeRevelee) {
       document.body.style.overflow = "";
@@ -138,6 +308,14 @@ export default function Dashboard() {
     }
 
     document.body.style.overflow = "hidden";
+
+    const lancerAnimation = window.setTimeout(() => {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          demarrerAnimationsRevelation();
+        });
+      });
+    }, 80);
 
     if (sonsActifs) {
       jouerApplaudissements();
@@ -156,6 +334,17 @@ export default function Dashboard() {
 
     return () => {
       document.body.style.overflow = "";
+      window.clearTimeout(lancerAnimation);
+
+      animationsRevelation.current.forEach((animation) => {
+        try {
+          animation.cancel();
+        } catch {
+          // Animation déjà terminée.
+        }
+      });
+
+      animationsRevelation.current = [];
 
       if (minuterieRevelation.current) {
         window.clearTimeout(
@@ -955,6 +1144,7 @@ function fermerRevelationEquipe() {
     >
       {equipeRevelee && (
         <div
+          ref={ecranRevelationRef}
           role="dialog"
           aria-modal="true"
           aria-label="Révélation de ton équipe"
@@ -972,8 +1162,7 @@ function fermerRevelationEquipe() {
             background:
               "radial-gradient(circle at 50% 45%, #4338ca 0%, #261b74 28%, #0b1235 58%, #020617 100%)",
 
-            animation:
-              "ouvertureRevelation 0.65s ease both",
+            opacity: 0,
           }}
         >
           <div
@@ -1035,6 +1224,7 @@ function fermerRevelationEquipe() {
           />
 
           <div
+            ref={confettisRevelationRef}
             aria-hidden="true"
             style={{
               position: "absolute",
@@ -1047,6 +1237,11 @@ function fermerRevelationEquipe() {
               (confetti) => (
                 <span
                   key={confetti.id}
+                  data-confetti-revelation="true"
+                  data-derive={confetti.derive}
+                  data-rotation={confetti.rotation}
+                  data-duree={Math.round(confetti.duree * 1000)}
+                  data-delai={Math.round(confetti.delai * 1000)}
                   style={{
                     "--derive-confetti":
                       `${confetti.derive}px`,
@@ -1077,20 +1272,7 @@ function fermerRevelationEquipe() {
                     transform:
                       `rotate(${confetti.rotation}deg)`,
 
-                    animationName:
-                      "chuteConfetti",
-
-                    animationDuration:
-                      `${confetti.duree}s`,
-
-                    animationDelay:
-                      `${confetti.delai}s`,
-
-                    animationTimingFunction:
-                      "cubic-bezier(.2,.65,.35,1)",
-
-                    animationIterationCount:
-                      "infinite",
+                    opacity: 0,
                   }}
                 />
               )
@@ -1160,6 +1342,7 @@ function fermerRevelationEquipe() {
             }}
           >
             <div
+              ref={badgeRevelationRef}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -1180,8 +1363,7 @@ function fermerRevelationEquipe() {
                 textTransform:
                   "uppercase",
 
-                animation:
-                  "arriveeBadge 0.65s 0.15s ease both",
+                opacity: 0,
               }}
             >
               <span>🏆</span>
@@ -1189,6 +1371,7 @@ function fermerRevelationEquipe() {
             </div>
 
             <p
+              ref={texteRevelationRef}
               style={{
                 margin: "20px 0 0",
                 color: "#e2e8f0",
@@ -1209,8 +1392,7 @@ function fermerRevelationEquipe() {
                 textShadow:
                   "0 6px 22px rgba(0,0,0,0.4)",
 
-                animation:
-                  "arriveeTexte 0.7s 0.45s ease both",
+                opacity: 0,
               }}
             >
               Vous faites partie de
@@ -1249,6 +1431,7 @@ function fermerRevelationEquipe() {
               />
 
               <div
+                ref={drapeauRevelationRef}
                 style={{
                   position: "relative",
 
@@ -1260,8 +1443,7 @@ function fermerRevelationEquipe() {
                   filter:
                     "drop-shadow(0 20px 28px rgba(0, 0, 0, 0.5))",
 
-                  animation:
-                    "revelationDrapeau 1.15s 0.8s cubic-bezier(.16,1.25,.35,1) both",
+                  opacity: 0,
                 }}
               >
                 {equipeRevelee.flag}
@@ -1269,6 +1451,7 @@ function fermerRevelationEquipe() {
             </div>
 
             <h1
+              ref={nomRevelationRef}
               style={{
                 margin: "4px 0 0",
 
@@ -1286,14 +1469,14 @@ function fermerRevelationEquipe() {
                 textShadow:
                   "0 10px 35px rgba(0,0,0,0.52)",
 
-                animation:
-                  "revelationNom 0.75s 1.25s cubic-bezier(.2,.9,.3,1.18) both",
+                opacity: 0,
               }}
             >
               {equipeRevelee.name}
             </h1>
 
             <div
+              ref={ligneRevelationRef}
               style={{
                 width: 90,
                 height: 3,
@@ -1303,12 +1486,13 @@ function fermerRevelationEquipe() {
                 background:
                   "linear-gradient(90deg, transparent, #c4b5fd, #fde047, #c4b5fd, transparent)",
 
-                animation:
-                  "agrandissementLigne 0.7s 1.55s ease both",
+                opacity: 0,
+                transform: "scaleX(0)",
               }}
             />
 
             <p
+              ref={descriptionRevelationRef}
               style={{
                 margin: "15px auto 0",
                 maxWidth: 420,
@@ -1317,8 +1501,7 @@ function fermerRevelationEquipe() {
                   "clamp(14px, 4vw, 17px)",
                 lineHeight: 1.5,
 
-                animation:
-                  "arriveeTexte 0.7s 1.65s ease both",
+                opacity: 0,
               }}
             >
               Représente fièrement ta
@@ -1327,6 +1510,7 @@ function fermerRevelationEquipe() {
             </p>
 
             <button
+              ref={boutonRevelationRef}
               type="button"
               onClick={
                 fermerRevelationEquipe
@@ -1353,8 +1537,7 @@ function fermerRevelationEquipe() {
                 fontWeight: 900,
                 cursor: "pointer",
 
-                animation:
-                  "arriveeBouton 0.7s 1.95s ease both",
+                opacity: 0,
               }}
             >
               C’est parti ! 🚀
