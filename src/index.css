@@ -96,3 +96,155 @@ a {
     font-size: 16px;
   }
 }
+@keyframes ouvertureRevelation {
+  0% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes arriveeBadge {
+  0% {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.9);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes arriveeTexte {
+  0% {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes revelationDrapeau {
+  0% {
+    opacity: 0;
+    transform: scale(0.05) rotate(-22deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.25) rotate(6deg);
+  }
+
+  70% {
+    transform: scale(0.88) rotate(-3deg);
+  }
+
+  85% {
+    transform: scale(1.08) rotate(2deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes revelationNom {
+  0% {
+    opacity: 0;
+    transform: translateY(35px) scale(0.7);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes arriveeBouton {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chuteConfetti {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -40px, 0) rotate(0deg);
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform:
+      translate3d(
+        var(--derive-confetti),
+        115vh,
+        0
+      )
+      rotate(900deg);
+  }
+}
+
+.revelation-ecran {
+  animation: ouvertureRevelation 0.7s ease both;
+}
+
+.revelation-badge {
+  opacity: 0;
+  animation: arriveeBadge 0.7s 0.2s ease forwards;
+}
+
+.revelation-texte {
+  opacity: 0;
+  animation: arriveeTexte 0.7s 0.55s ease forwards;
+}
+
+.revelation-drapeau {
+  opacity: 0;
+  animation:
+    revelationDrapeau 1.25s 0.9s
+    cubic-bezier(0.16, 1.25, 0.35, 1)
+    forwards;
+}
+
+.revelation-nom {
+  opacity: 0;
+  animation:
+    revelationNom 0.8s 1.45s
+    cubic-bezier(0.2, 0.9, 0.3, 1.18)
+    forwards;
+}
+
+.revelation-description {
+  opacity: 0;
+  animation: arriveeTexte 0.7s 1.8s ease forwards;
+}
+
+.revelation-bouton {
+  opacity: 0;
+  animation: arriveeBouton 0.7s 2.1s ease forwards;
+}
+
+.revelation-confetti {
+  animation-name: chuteConfetti;
+  animation-timing-function: cubic-bezier(0.2, 0.65, 0.35, 1);
+  animation-iteration-count: infinite;
+}

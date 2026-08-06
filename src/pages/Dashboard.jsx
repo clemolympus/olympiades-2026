@@ -1143,423 +1143,152 @@ function fermerRevelationEquipe() {
       }}
     >
       {equipeRevelee && (
-        <div
-          ref={ecranRevelationRef}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Révélation de ton équipe"
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 5000,
-            display: "grid",
-            placeItems: "center",
-            padding: 20,
-            overflow: "hidden",
-            color: "#f8fafc",
-            textAlign: "center",
-
-            background:
-              "radial-gradient(circle at 50% 45%, #4338ca 0%, #261b74 28%, #0b1235 58%, #020617 100%)",
-
-            opacity: 0,
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              inset: "-30%",
-              opacity: 0.28,
-
-              background:
-                "repeating-conic-gradient(from 0deg, rgba(255,255,255,0.22) 0deg 5deg, transparent 5deg 15deg)",
-
-              animation:
-                "rotationRayons 22s linear infinite",
-            }}
-          />
-
-          <div
-            style={{
-              position: "absolute",
-              top: "48%",
-              left: "50%",
-              width:
-                "min(130vw, 760px)",
-              height:
-                "min(130vw, 760px)",
-              border:
-                "2px solid rgba(255,255,255,0.12)",
-              borderRadius: "50%",
-              boxShadow:
-                "0 0 80px rgba(139, 92, 246, 0.38), inset 0 0 80px rgba(59, 130, 246, 0.18)",
-
-              transform:
-                "translate(-50%, -50%)",
-
-              animation:
-                "pulsationCercle 2s ease-in-out infinite",
-            }}
-          />
-
-          <div
-            style={{
-              position: "absolute",
-              top: "48%",
-              left: "50%",
-              width:
-                "min(92vw, 560px)",
-              height:
-                "min(92vw, 560px)",
-              border:
-                "1px solid rgba(255,255,255,0.18)",
-              borderRadius: "50%",
-
-              transform:
-                "translate(-50%, -50%)",
-
-              animation:
-                "pulsationCercleDeux 2.5s ease-in-out infinite",
-            }}
-          />
-
-          <div
-            ref={confettisRevelationRef}
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              inset: 0,
-              overflow: "hidden",
-              pointerEvents: "none",
-            }}
-          >
-            {confettis.map(
-              (confetti) => (
-                <span
-                  key={confetti.id}
-                  data-confetti-revelation="true"
-                  data-derive={confetti.derive}
-                  data-rotation={confetti.rotation}
-                  data-duree={Math.round(confetti.duree * 1000)}
-                  data-delai={Math.round(confetti.delai * 1000)}
-                  style={{
-                    "--derive-confetti":
-                      `${confetti.derive}px`,
-
-                    position:
-                      "absolute",
-
-                    top: -30,
-
-                    left:
-                      `${confetti.gauche}%`,
-
-                    width:
-                      confetti.largeur,
-
-                    height:
-                      confetti.hauteur,
-
-                    borderRadius:
-                      confetti.forme,
-
-                    background:
-                      confetti.couleur,
-
-                    boxShadow:
-                      "0 0 8px rgba(255,255,255,0.22)",
-
-                    transform:
-                      `rotate(${confetti.rotation}deg)`,
-
-                    opacity: 0,
-                  }}
-                />
-              )
-            )}
-          </div>
-
-          <div
-            style={{
-              position: "absolute",
-              top: "16%",
-              left: "13%",
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: "#fde047",
-
-              boxShadow:
-                "0 0 22px 8px rgba(253, 224, 71, 0.52)",
-
-              animation:
-                "etoileBrillante 1.4s ease-in-out infinite",
-            }}
-          />
-
-          <div
-            style={{
-              position: "absolute",
-              top: "21%",
-              right: "16%",
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: "#f8fafc",
-
-              boxShadow:
-                "0 0 20px 7px rgba(248, 250, 252, 0.42)",
-
-              animation:
-                "etoileBrillante 1.8s 0.3s ease-in-out infinite",
-            }}
-          />
-
-          <div
-            style={{
-              position: "absolute",
-              bottom: "19%",
-              left: "19%",
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: "#c4b5fd",
-
-              boxShadow:
-                "0 0 22px 8px rgba(196, 181, 253, 0.45)",
-
-              animation:
-                "etoileBrillante 1.6s 0.6s ease-in-out infinite",
-            }}
-          />
-
-          <section
-            style={{
-              position: "relative",
-              zIndex: 5,
-              width: "100%",
-              maxWidth: 620,
-            }}
-          >
-            <div
-              ref={badgeRevelationRef}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "8px 14px",
-                border:
-                  "1px solid rgba(255,255,255,0.22)",
-                borderRadius: 999,
-                color: "#ddd6fe",
-                background:
-                  "rgba(15, 23, 42, 0.5)",
-                backdropFilter:
-                  "blur(10px)",
-                fontSize: 12,
-                fontWeight: 900,
-                letterSpacing:
-                  "0.13em",
-                textTransform:
-                  "uppercase",
-
-                opacity: 0,
-              }}
-            >
-              <span>🏆</span>
-              Attribution terminée
-            </div>
-
-            <p
-              ref={texteRevelationRef}
-              style={{
-                margin: "20px 0 0",
-                color: "#e2e8f0",
-
-                fontSize:
-                  "clamp(17px, 4.8vw, 24px)",
-
-                fontWeight: 900,
-
-                letterSpacing:
-                  "0.08em",
-
-                lineHeight: 1.2,
-
-                textTransform:
-                  "uppercase",
-
-                textShadow:
-                  "0 6px 22px rgba(0,0,0,0.4)",
-
-                opacity: 0,
-              }}
-            >
-              Vous faites partie de
-              l’équipe
-            </p>
-
-            <div
-              style={{
-                position: "relative",
-                display: "grid",
-                placeItems: "center",
-                minHeight:
-                  "clamp(165px, 42vw, 245px)",
-                marginTop: 4,
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  width:
-                    "clamp(140px, 37vw, 230px)",
-                  height:
-                    "clamp(140px, 37vw, 230px)",
-
-                  borderRadius: "50%",
-
-                  background:
-                    "radial-gradient(circle, rgba(255,255,255,0.27), rgba(139,92,246,0.12) 45%, transparent 70%)",
-
-                  filter:
-                    "blur(2px)",
-
-                  animation:
-                    "haloDrapeau 1.9s ease-in-out infinite",
-                }}
-              />
-
-              <div
-                ref={drapeauRevelationRef}
-                style={{
-                  position: "relative",
-
-                  fontSize:
-                    "clamp(115px, 35vw, 205px)",
-
-                  lineHeight: 1,
-
-                  filter:
-                    "drop-shadow(0 20px 28px rgba(0, 0, 0, 0.5))",
-
-                  opacity: 0,
-                }}
-              >
-                {equipeRevelee.flag}
-              </div>
-            </div>
-
-            <h1
-              ref={nomRevelationRef}
-              style={{
-                margin: "4px 0 0",
-
-                fontSize:
-                  "clamp(38px, 11vw, 70px)",
-
-                lineHeight: 0.95,
-
-                letterSpacing:
-                  "0.025em",
-
-                textTransform:
-                  "uppercase",
-
-                textShadow:
-                  "0 10px 35px rgba(0,0,0,0.52)",
-
-                opacity: 0,
-              }}
-            >
-              {equipeRevelee.name}
-            </h1>
-
-            <div
-              ref={ligneRevelationRef}
-              style={{
-                width: 90,
-                height: 3,
-                margin: "19px auto 0",
-                borderRadius: 999,
-
-                background:
-                  "linear-gradient(90deg, transparent, #c4b5fd, #fde047, #c4b5fd, transparent)",
-
-                opacity: 0,
-                transform: "scaleX(0)",
-              }}
-            />
-
-            <p
-              ref={descriptionRevelationRef}
-              style={{
-                margin: "15px auto 0",
-                maxWidth: 420,
-                color: "#cbd5e1",
-                fontSize:
-                  "clamp(14px, 4vw, 17px)",
-                lineHeight: 1.5,
-
-                opacity: 0,
-              }}
-            >
-              Représente fièrement ta
-              nation et mène ton équipe
-              vers la victoire.
-            </p>
-
-            <button
-              ref={boutonRevelationRef}
-              type="button"
-              onClick={
-                fermerRevelationEquipe
-              }
-              style={{
-                width: "100%",
-                maxWidth: 360,
-                marginTop: 27,
-                padding: "15px 18px",
-
-                border:
-                  "1px solid rgba(255,255,255,0.34)",
-
-                borderRadius: 14,
-                color: "white",
-
-                background:
-                  "linear-gradient(135deg, #8b5cf6 0%, #4f46e5 55%, #2563eb 100%)",
-
-                boxShadow:
-                  "0 17px 42px rgba(37, 99, 235, 0.34), inset 0 1px 0 rgba(255,255,255,0.22)",
-
-                fontSize: 16,
-                fontWeight: 900,
-                cursor: "pointer",
-
-                opacity: 0,
-              }}
-            >
-              C’est parti ! 🚀
-            </button>
-
-            <div
-              style={{
-                marginTop: 11,
-                color:
-                  "rgba(203, 213, 225, 0.72)",
-                fontSize: 11,
-
-                animation:
-                  "arriveeTexte 0.7s 2.1s ease both",
-              }}
-            >
-              Cet écran se fermera
-              automatiquement.
-            </div>
-          </section>
-        </div>
-      )}
+  <div
+    className="revelation-ecran"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Révélation de ton équipe"
+    style={{
+      position: "fixed",
+      inset: 0,
+      zIndex: 5000,
+      display: "grid",
+      placeItems: "center",
+      padding: 24,
+      overflow: "hidden",
+      color: "#f8fafc",
+      textAlign: "center",
+      background:
+        "radial-gradient(circle at center, #312e81 0%, #111047 40%, #020617 82%)",
+    }}
+  >
+    {Array.from({ length: 40 }).map((_, index) => (
+      <span
+        key={index}
+        className="revelation-confetti"
+        style={{
+          position: "absolute",
+          top: -30,
+          left: `${Math.random() * 100}%`,
+          width: 8,
+          height: 14,
+          borderRadius: 2,
+          background: [
+            "#facc15",
+            "#f97316",
+            "#22c55e",
+            "#3b82f6",
+            "#a855f7",
+            "#ec4899",
+          ][index % 6],
+          animationDuration: `${2.2 + Math.random() * 2}s`,
+          animationDelay: `${Math.random() * 1.5}s`,
+          "--derive-confetti": `${-120 + Math.random() * 240}px`,
+        }}
+      />
+    ))}
+
+    <section
+      style={{
+        position: "relative",
+        zIndex: 2,
+        width: "100%",
+        maxWidth: 520,
+      }}
+    >
+      <div
+        className="revelation-badge"
+        style={{
+          display: "inline-block",
+          padding: "7px 12px",
+          borderRadius: 999,
+          color: "#ddd6fe",
+          background: "rgba(139, 92, 246, 0.18)",
+          fontSize: 12,
+          fontWeight: 900,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+        }}
+      >
+        Attribution terminée
+      </div>
+
+      <p
+        className="revelation-texte"
+        style={{
+          margin: "20px 0 0",
+          color: "#c4b5fd",
+          fontSize: 15,
+          fontWeight: 900,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+        }}
+      >
+        Vous faites partie de
+      </p>
+
+      <div
+        className="revelation-drapeau"
+        style={{
+          marginTop: 18,
+          fontSize: "clamp(120px, 35vw, 210px)",
+          lineHeight: 1,
+          filter:
+            "drop-shadow(0 18px 35px rgba(0, 0, 0, 0.45))",
+        }}
+      >
+        {equipeRevelee.flag}
+      </div>
+
+      <h1
+        className="revelation-nom"
+        style={{
+          margin: "24px 0 0",
+          fontSize: "clamp(36px, 10vw, 62px)",
+          lineHeight: 1,
+          textTransform: "uppercase",
+          textShadow: "0 10px 30px rgba(0, 0, 0, 0.4)",
+        }}
+      >
+        {equipeRevelee.name}
+      </h1>
+
+      <p
+        className="revelation-description"
+        style={{
+          margin: "15px 0 0",
+          color: "#cbd5e1",
+          fontSize: 17,
+        }}
+      >
+        Bienvenue dans ton équipe. Fais-la gagner !
+      </p>
+
+      <button
+        type="button"
+        className="revelation-bouton"
+        onClick={fermerRevelationEquipe}
+        style={{
+          width: "100%",
+          maxWidth: 360,
+          marginTop: 30,
+          padding: "15px 18px",
+          border: "1px solid rgba(196, 181, 253, 0.45)",
+          borderRadius: 14,
+          color: "white",
+          background:
+            "linear-gradient(135deg, #7c3aed, #4f46e5)",
+          boxShadow: "0 16px 40px rgba(76, 29, 149, 0.38)",
+          fontSize: 16,
+          fontWeight: 900,
+          cursor: "pointer",
+        }}
+      >
+        Découvrir mon équipe
+      </button>
+    </section>
+  </div>
+)}
 
       {notification && (
         <div
