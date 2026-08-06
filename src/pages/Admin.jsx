@@ -2,6 +2,70 @@ import { useEffect, useState } from "react";
 import { supabase } from "../services/supabase";
 import BottomNav from "../components/BottomNav";
 
+const couleurs = {
+  fond: "#020617",
+  fondCarte: "rgba(15, 23, 42, 0.9)",
+  fondSecondaire: "rgba(30, 41, 59, 0.75)",
+  bordure: "rgba(148, 163, 184, 0.2)",
+  texte: "#f8fafc",
+  texteSecondaire: "#aeb8cb",
+  violet: "#8b5cf6",
+  violetClair: "#c4b5fd",
+  vert: "#4ade80",
+  rouge: "#f87171",
+  jaune: "#fde047",
+};
+
+const styleCarte = {
+  padding: 18,
+  border: `1px solid ${couleurs.bordure}`,
+  borderRadius: 16,
+  color: couleurs.texte,
+  background: couleurs.fondCarte,
+  boxShadow: "0 12px 30px rgba(0, 0, 0, 0.18)",
+};
+
+const styleChamp = {
+  boxSizing: "border-box",
+  width: "100%",
+  minWidth: 0,
+  padding: "12px 13px",
+  border: `1px solid ${couleurs.bordure}`,
+  borderRadius: 11,
+  outline: "none",
+  color: couleurs.texte,
+  background: "#0f172a",
+};
+
+const styleBoutonPrincipal = {
+  minHeight: 44,
+  padding: "11px 15px",
+  border: 0,
+  borderRadius: 11,
+  color: "white",
+  background: "linear-gradient(135deg, #7c3aed, #4f46e5)",
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+const styleBoutonSecondaire = {
+  minHeight: 42,
+  padding: "10px 14px",
+  border: `1px solid ${couleurs.bordure}`,
+  borderRadius: 11,
+  color: couleurs.texte,
+  background: "rgba(30, 41, 59, 0.85)",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const styleBoutonDanger = {
+  ...styleBoutonSecondaire,
+  color: "#fecaca",
+  border: "1px solid rgba(248, 113, 113, 0.28)",
+  background: "rgba(127, 29, 29, 0.22)",
+};
+
 export default function Admin() {
   const [motDePasse, setMotDePasse] = useState("");
   const [tokenAdmin, setTokenAdmin] = useState(
@@ -138,6 +202,7 @@ export default function Admin() {
     setJoueurPointsId("");
     setJoueurPointsValeur("");
     setJoueurPointsRaison("");
+
     await chargerEtat();
   }
 
@@ -202,6 +267,7 @@ export default function Admin() {
     setEquipePointsId("");
     setEquipePointsValeur("");
     setEquipePointsRaison("");
+
     await chargerEtat();
   }
 
@@ -517,7 +583,10 @@ export default function Admin() {
 
   function afficherNomJoueur(id) {
     const joueur = trouverJoueur(id);
-    return joueur ? afficherNomComplet(joueur) : "Joueur inconnu";
+
+    return joueur
+      ? afficherNomComplet(joueur)
+      : "Joueur inconnu";
   }
 
   function afficherEquipeDuJoueur(id) {
@@ -546,39 +615,75 @@ export default function Admin() {
     return (
       <main
         style={{
-          maxWidth: 480,
-          margin: "40px auto",
-          padding: "20px 20px 100px",
+          minHeight: "100vh",
+          padding: "24px 18px 105px",
+          color: couleurs.texte,
+          background:
+            "radial-gradient(circle at top, #17164f 0%, #080d20 42%, #020617 100%)",
         }}
       >
-        <h1>Administration</h1>
-        <p>Entre le mot de passe administrateur.</p>
-
-        <input
-          type="password"
-          value={motDePasse}
-          onChange={(event) => setMotDePasse(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") connecterAdmin();
-          }}
-          placeholder="Mot de passe"
+        <section
           style={{
-            boxSizing: "border-box",
-            display: "block",
-            width: "100%",
-            padding: 12,
-            marginTop: 16,
-            marginBottom: 16,
+            ...styleCarte,
+            maxWidth: 460,
+            margin: "30px auto",
           }}
-        />
-
-        <button
-          type="button"
-          onClick={connecterAdmin}
-          disabled={connexionEnCours}
         >
-          {connexionEnCours ? "Connexion..." : "Se connecter"}
-        </button>
+          <p
+            style={{
+              margin: 0,
+              color: couleurs.violetClair,
+              fontSize: 13,
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+            }}
+          >
+            Olympiades 2026
+          </p>
+
+          <h1 style={{ margin: "10px 0 8px" }}>
+            Administration 🔐
+          </h1>
+
+          <p style={{ color: couleurs.texteSecondaire }}>
+            Entre le mot de passe administrateur.
+          </p>
+
+          <input
+            type="password"
+            value={motDePasse}
+            onChange={(event) =>
+              setMotDePasse(event.target.value)
+            }
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                connecterAdmin();
+              }
+            }}
+            placeholder="Mot de passe"
+            style={{
+              ...styleChamp,
+              marginTop: 20,
+            }}
+          />
+
+          <button
+            type="button"
+            onClick={connecterAdmin}
+            disabled={connexionEnCours}
+            style={{
+              ...styleBoutonPrincipal,
+              width: "100%",
+              marginTop: 12,
+              opacity: connexionEnCours ? 0.6 : 1,
+            }}
+          >
+            {connexionEnCours
+              ? "Connexion..."
+              : "Se connecter"}
+          </button>
+        </section>
 
         <BottomNav />
       </main>
@@ -588,637 +693,833 @@ export default function Admin() {
   return (
     <main
       style={{
-        maxWidth: 900,
-        margin: "40px auto",
-        padding: "20px 20px 100px",
+        minHeight: "100vh",
+        padding: "22px 18px 115px",
+        color: couleurs.texte,
+        background:
+          "radial-gradient(circle at top, #17164f 0%, #080d20 42%, #020617 100%)",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 16,
-        }}
-      >
-        <div>
-          <h1>Administration</h1>
-          <p>Mode administrateur actif.</p>
-        </div>
-
-        <button type="button" onClick={seDeconnecterAdmin}>
-          Quitter le mode Admin
-        </button>
-      </div>
-
-      {message && (
-        <div
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        <header
           style={{
-            marginTop: 20,
-            padding: 14,
-            border: "1px solid #86efac",
-            borderRadius: 10,
-            background: "#dcfce7",
-          }}
-        >
-          {message}
-        </div>
-      )}
-
-      <section style={{ marginTop: 32 }}>
-        <h2>Gestion manuelle des points</h2>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
             gap: 16,
-            marginTop: 18,
           }}
         >
-          <article
+          <div>
+            <p
+              style={{
+                margin: 0,
+                color: couleurs.violet,
+                fontSize: 13,
+                fontWeight: 900,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              Olympiades 2026
+            </p>
+
+            <h1
+              style={{
+                margin: "8px 0 5px",
+                fontSize: "clamp(30px, 8vw, 46px)",
+              }}
+            >
+              Administration 🔐
+            </h1>
+
+            <p style={{ color: couleurs.texteSecondaire }}>
+              Gère les joueurs, les défis, les équipes et les points.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={seDeconnecterAdmin}
+            style={styleBoutonSecondaire}
+          >
+            Quitter le mode Admin
+          </button>
+        </header>
+
+        {message && (
+          <div
             style={{
-              padding: 20,
-              border: "1px solid #ddd",
-              borderRadius: 14,
-              background: "white",
+              marginTop: 20,
+              padding: 14,
+              border: "1px solid rgba(34, 197, 94, 0.3)",
+              borderRadius: 12,
+              color: "#bbf7d0",
+              background: "rgba(20, 83, 45, 0.25)",
             }}
           >
-            <h3 style={{ marginTop: 0 }}>👤 Points joueur</h3>
+            ✅ {message}
+          </div>
+        )}
 
-            <select
-              value={joueurPointsId}
-              onChange={(event) => setJoueurPointsId(event.target.value)}
-              disabled={pointsEnCours}
-              style={{
-                boxSizing: "border-box",
-                width: "100%",
-                padding: 11,
-                marginBottom: 10,
-              }}
-            >
-              <option value="">Choisir un joueur</option>
+        <section style={{ marginTop: 34 }}>
+          <h2>Gestion manuelle des points</h2>
 
-              {joueurs.map((joueur) => (
-                <option key={joueur.id} value={joueur.id}>
-                  {afficherNomComplet(joueur)} —{" "}
-                  {Number(joueur.points ?? 0)} points
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="number"
-              step="1"
-              value={joueurPointsValeur}
-              onChange={(event) =>
-                setJoueurPointsValeur(event.target.value)
-              }
-              placeholder="Points : 3 ou -2"
-              disabled={pointsEnCours}
-              style={{
-                boxSizing: "border-box",
-                width: "100%",
-                padding: 11,
-                marginBottom: 10,
-              }}
-            />
-
-            <input
-              type="text"
-              value={joueurPointsRaison}
-              onChange={(event) =>
-                setJoueurPointsRaison(event.target.value)
-              }
-              placeholder="Raison libre"
-              disabled={pointsEnCours}
-              style={{
-                boxSizing: "border-box",
-                width: "100%",
-                padding: 11,
-                marginBottom: 12,
-              }}
-            />
-
-            <button
-              type="button"
-              onClick={ajouterPointsJoueur}
-              disabled={pointsEnCours}
-            >
-              Valider les points du joueur
-            </button>
-          </article>
-
-          <article
+          <div
             style={{
-              padding: 20,
-              border: "1px solid #ddd",
-              borderRadius: 14,
-              background: "white",
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit, minmax(270px, 1fr))",
+              gap: 16,
+              marginTop: 16,
             }}
           >
-            <h3 style={{ marginTop: 0 }}>🌍 Points équipe</h3>
+            <article style={styleCarte}>
+              <h3 style={{ marginTop: 0 }}>
+                👤 Points joueur
+              </h3>
 
-            <select
-              value={equipePointsId}
-              onChange={(event) => setEquipePointsId(event.target.value)}
-              disabled={pointsEnCours}
+              <select
+                value={joueurPointsId}
+                onChange={(event) =>
+                  setJoueurPointsId(event.target.value)
+                }
+                disabled={pointsEnCours}
+                style={styleChamp}
+              >
+                <option value="">Choisir un joueur</option>
+
+                {joueurs.map((joueur) => (
+                  <option key={joueur.id} value={joueur.id}>
+                    {afficherNomComplet(joueur)} —{" "}
+                    {Number(joueur.points ?? 0)} points
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="number"
+                step="1"
+                value={joueurPointsValeur}
+                onChange={(event) =>
+                  setJoueurPointsValeur(event.target.value)
+                }
+                placeholder="Points : 3 ou -2"
+                disabled={pointsEnCours}
+                style={{
+                  ...styleChamp,
+                  marginTop: 10,
+                }}
+              />
+
+              <input
+                type="text"
+                value={joueurPointsRaison}
+                onChange={(event) =>
+                  setJoueurPointsRaison(event.target.value)
+                }
+                placeholder="Raison libre"
+                disabled={pointsEnCours}
+                style={{
+                  ...styleChamp,
+                  marginTop: 10,
+                }}
+              />
+
+              <button
+                type="button"
+                onClick={ajouterPointsJoueur}
+                disabled={pointsEnCours}
+                style={{
+                  ...styleBoutonPrincipal,
+                  width: "100%",
+                  marginTop: 12,
+                }}
+              >
+                Valider les points du joueur
+              </button>
+            </article>
+
+            <article style={styleCarte}>
+              <h3 style={{ marginTop: 0 }}>
+                🌍 Points équipe
+              </h3>
+
+              <select
+                value={equipePointsId}
+                onChange={(event) =>
+                  setEquipePointsId(event.target.value)
+                }
+                disabled={pointsEnCours}
+                style={styleChamp}
+              >
+                <option value="">Choisir une équipe</option>
+
+                {equipes.map((equipe) => (
+                  <option key={equipe.id} value={equipe.id}>
+                    {equipe.flag} {equipe.name} —{" "}
+                    {Number(equipe.score ?? 0)} points
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="number"
+                step="1"
+                value={equipePointsValeur}
+                onChange={(event) =>
+                  setEquipePointsValeur(event.target.value)
+                }
+                placeholder="Points : 5 ou -1"
+                disabled={pointsEnCours}
+                style={{
+                  ...styleChamp,
+                  marginTop: 10,
+                }}
+              />
+
+              <input
+                type="text"
+                value={equipePointsRaison}
+                onChange={(event) =>
+                  setEquipePointsRaison(event.target.value)
+                }
+                placeholder="Raison libre"
+                disabled={pointsEnCours}
+                style={{
+                  ...styleChamp,
+                  marginTop: 10,
+                }}
+              />
+
+              <button
+                type="button"
+                onClick={ajouterPointsEquipe}
+                disabled={pointsEnCours}
+                style={{
+                  ...styleBoutonPrincipal,
+                  width: "100%",
+                  marginTop: 12,
+                }}
+              >
+                Valider les points de l’équipe
+              </button>
+            </article>
+          </div>
+        </section>
+
+        <section style={{ marginTop: 38 }}>
+          <h2>Joueurs sans équipe</h2>
+
+          {joueursSansEquipe.length === 0 ? (
+            <div
               style={{
-                boxSizing: "border-box",
-                width: "100%",
-                padding: 11,
-                marginBottom: 10,
+                ...styleCarte,
+                marginTop: 15,
+                color: couleurs.texteSecondaire,
               }}
             >
-              <option value="">Choisir une équipe</option>
-
-              {equipes.map((equipe) => (
-                <option key={equipe.id} value={equipe.id}>
-                  {equipe.flag} {equipe.name} —{" "}
-                  {Number(equipe.score ?? 0)} points
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="number"
-              step="1"
-              value={equipePointsValeur}
-              onChange={(event) =>
-                setEquipePointsValeur(event.target.value)
-              }
-              placeholder="Points : 5 ou -1"
-              disabled={pointsEnCours}
+              Tous les joueurs sont déjà affectés à une équipe.
+            </div>
+          ) : (
+            <div
               style={{
-                boxSizing: "border-box",
-                width: "100%",
-                padding: 11,
-                marginBottom: 10,
+                display: "grid",
+                gap: 14,
+                marginTop: 15,
               }}
-            />
-
-            <input
-              type="text"
-              value={equipePointsRaison}
-              onChange={(event) =>
-                setEquipePointsRaison(event.target.value)
-              }
-              placeholder="Raison libre"
-              disabled={pointsEnCours}
-              style={{
-                boxSizing: "border-box",
-                width: "100%",
-                padding: 11,
-                marginBottom: 12,
-              }}
-            />
-
-            <button
-              type="button"
-              onClick={ajouterPointsEquipe}
-              disabled={pointsEnCours}
             >
-              Valider les points de l’équipe
-            </button>
-          </article>
-        </div>
-      </section>
+              {joueursSansEquipe.map((joueur) => {
+                const traitement =
+                  affectationEnCours === joueur.id;
 
-      <section style={{ marginTop: 40 }}>
-        <h2>Joueurs sans équipe</h2>
+                const equipeChoisie =
+                  equipesChoisies[joueur.id] ?? "";
 
-        {joueursSansEquipe.length === 0 ? (
-          <p>Tous les joueurs sont déjà affectés à une équipe.</p>
-        ) : (
-          <div style={{ display: "grid", gap: 16, marginTop: 20 }}>
-            {joueursSansEquipe.map((joueur) => {
-              const traitement = affectationEnCours === joueur.id;
-              const equipeChoisie = equipesChoisies[joueur.id] ?? "";
+                return (
+                  <article key={joueur.id} style={styleCarte}>
+                    <h3 style={{ marginTop: 0 }}>
+                      {afficherNomComplet(joueur)}
+                    </h3>
 
-              return (
-                <article
-                  key={joueur.id}
-                  style={{
-                    padding: 20,
-                    border: "1px solid #ddd",
-                    borderRadius: 14,
-                    background: "white",
-                  }}
-                >
-                  <h3 style={{ marginTop: 0 }}>
-                    {afficherNomComplet(joueur)}
-                  </h3>
+                    <p style={{ color: couleurs.texteSecondaire }}>
+                      Niveau sportif :{" "}
+                      <strong>{joueur.sport_level}/4</strong>
+                    </p>
 
-                  <p>
-                    Niveau sportif :{" "}
-                    <strong>{joueur.sport_level}/4</strong>
-                  </p>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: 12,
-                      marginTop: 18,
-                    }}
-                  >
                     <button
                       type="button"
-                      onClick={() => affecterAleatoirement(joueur)}
+                      onClick={() =>
+                        affecterAleatoirement(joueur)
+                      }
                       disabled={traitement}
+                      style={{
+                        ...styleBoutonSecondaire,
+                        width: "100%",
+                        marginTop: 14,
+                      }}
                     >
                       🎲 Affecter automatiquement
                     </button>
 
-                    <div
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: 10,
-                      }}
-                    >
-                      <select
-                        value={equipeChoisie}
-                        onChange={(event) =>
-                          setEquipesChoisies((anciennesEquipes) => ({
+                    <select
+                      value={equipeChoisie}
+                      onChange={(event) =>
+                        setEquipesChoisies(
+                          (anciennesEquipes) => ({
                             ...anciennesEquipes,
                             [joueur.id]: event.target.value,
-                          }))
-                        }
-                        disabled={traitement}
+                          })
+                        )
+                      }
+                      disabled={traitement}
+                      style={{
+                        ...styleChamp,
+                        marginTop: 10,
+                      }}
+                    >
+                      <option value="">Choisir une équipe</option>
+
+                      {equipes.map((equipe) => {
+                        const nombreMembres =
+                          nombreMembresEquipe(equipe.id);
+
+                        return (
+                          <option
+                            key={equipe.id}
+                            value={equipe.id}
+                          >
+                            {equipe.flag} {equipe.name} —{" "}
+                            {nombreMembres} joueur
+                            {nombreMembres > 1 ? "s" : ""}
+                          </option>
+                        );
+                      })}
+                    </select>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        affecterManuellement(joueur)
+                      }
+                      disabled={traitement || !equipeChoisie}
+                      style={{
+                        ...styleBoutonPrincipal,
+                        width: "100%",
+                        marginTop: 10,
+                      }}
+                    >
+                      Affecter manuellement
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <section style={{ marginTop: 38 }}>
+          <h2>Défis à valider</h2>
+
+          {defisEnAttente.length === 0 ? (
+            <div
+              style={{
+                ...styleCarte,
+                marginTop: 15,
+                color: couleurs.texteSecondaire,
+              }}
+            >
+              Aucun défi en attente.
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gap: 14,
+                marginTop: 15,
+              }}
+            >
+              {defisEnAttente.map((defi) => {
+                const traitement =
+                  defiEnCours === defi.id;
+
+                return (
+                  <article key={defi.id} style={styleCarte}>
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: 23,
+                      }}
+                    >
+                      ⚔️ {defi.name}
+                    </h3>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gap: 10,
+                        marginTop: 16,
+                      }}
+                    >
+                      <div
                         style={{
-                          boxSizing: "border-box",
-                          flex: "1 1 230px",
-                          minWidth: 0,
-                          padding: 11,
+                          padding: 13,
+                          borderRadius: 12,
+                          background: couleurs.fondSecondaire,
                         }}
                       >
-                        <option value="">Choisir une équipe</option>
+                        <strong>
+                          {afficherNomJoueur(defi.creator_id)}
+                        </strong>
 
-                        {equipes.map((equipe) => {
-                          const nombreMembres =
-                            nombreMembresEquipe(equipe.id);
+                        <div
+                          style={{
+                            marginTop: 4,
+                            color: couleurs.texteSecondaire,
+                          }}
+                        >
+                          {afficherEquipeDuJoueur(
+                            defi.creator_id
+                          )}
+                        </div>
+                      </div>
 
-                          return (
-                            <option
-                              key={equipe.id}
-                              value={equipe.id}
-                            >
-                              {equipe.flag} {equipe.name} —{" "}
-                              {nombreMembres} joueur
-                              {nombreMembres > 1 ? "s" : ""}
-                            </option>
-                          );
-                        })}
-                      </select>
+                      <div
+                        style={{
+                          textAlign: "center",
+                          color: couleurs.violetClair,
+                          fontWeight: 900,
+                        }}
+                      >
+                        CONTRE
+                      </div>
+
+                      <div
+                        style={{
+                          padding: 13,
+                          borderRadius: 12,
+                          background: couleurs.fondSecondaire,
+                        }}
+                      >
+                        <strong>
+                          {afficherNomJoueur(defi.opponent_id)}
+                        </strong>
+
+                        <div
+                          style={{
+                            marginTop: 4,
+                            color: couleurs.texteSecondaire,
+                          }}
+                        >
+                          {afficherEquipeDuJoueur(
+                            defi.opponent_id
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <p
+                      style={{
+                        marginTop: 14,
+                        color: couleurs.texteSecondaire,
+                      }}
+                    >
+                      Témoin :{" "}
+                      <strong>
+                        {afficherNomJoueur(defi.witness_id)}
+                      </strong>
+                    </p>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gap: 9,
+                        marginTop: 16,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        disabled={traitement}
+                        onClick={() =>
+                          validerDefi(defi, defi.creator_id)
+                        }
+                        style={styleBoutonPrincipal}
+                      >
+                        🏆 Victoire{" "}
+                        {afficherNomJoueur(defi.creator_id)}
+                      </button>
 
                       <button
                         type="button"
-                        onClick={() => affecterManuellement(joueur)}
-                        disabled={traitement || !equipeChoisie}
+                        disabled={traitement}
+                        onClick={() =>
+                          validerDefi(defi, defi.opponent_id)
+                        }
+                        style={styleBoutonPrincipal}
                       >
-                        Affecter manuellement
+                        🏆 Victoire{" "}
+                        {afficherNomJoueur(defi.opponent_id)}
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={traitement}
+                        onClick={() => supprimerDefi(defi)}
+                        style={styleBoutonDanger}
+                      >
+                        🗑️ Supprimer le défi
                       </button>
                     </div>
-                  </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
 
-                  {traitement && <p>Affectation en cours...</p>}
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
+        <section style={{ marginTop: 38 }}>
+          <h2>Défis terminés</h2>
 
-      <section style={{ marginTop: 40 }}>
-        <h2>Défis à valider</h2>
-
-        {defisEnAttente.length === 0 ? (
-          <p>Aucun défi en attente.</p>
-        ) : (
-          <div style={{ display: "grid", gap: 16, marginTop: 20 }}>
-            {defisEnAttente.map((defi) => {
-              const traitement = defiEnCours === defi.id;
-
-              return (
-                <article
-                  key={defi.id}
-                  style={{
-                    padding: 20,
-                    border: "1px solid #ddd",
-                    borderRadius: 14,
-                    background: "white",
-                  }}
-                >
-                  <h3>{defi.name}</h3>
-
-                  <p>
-                    <strong>
-                      {afficherNomJoueur(defi.creator_id)}
-                    </strong>
-                    {" — "}
-                    {afficherEquipeDuJoueur(defi.creator_id)}
-                  </p>
-
-                  <p style={{ fontWeight: 700 }}>contre</p>
-
-                  <p>
-                    <strong>
-                      {afficherNomJoueur(defi.opponent_id)}
-                    </strong>
-                    {" — "}
-                    {afficherEquipeDuJoueur(defi.opponent_id)}
-                  </p>
-
-                  <p>
-                    Témoin :{" "}
-                    <strong>
-                      {afficherNomJoueur(defi.witness_id)}
-                    </strong>
-                    {" — "}
-                    {afficherEquipeDuJoueur(defi.witness_id)}
-                  </p>
-
+          {defisTermines.length === 0 ? (
+            <div
+              style={{
+                ...styleCarte,
+                marginTop: 15,
+                color: couleurs.texteSecondaire,
+              }}
+            >
+              Aucun défi terminé.
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(260px, 1fr))",
+                gap: 14,
+                marginTop: 15,
+              }}
+            >
+              {defisTermines.map((defi) => (
+                <article key={defi.id} style={styleCarte}>
                   <div
                     style={{
                       display: "flex",
-                      flexWrap: "wrap",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
                       gap: 10,
-                      marginTop: 18,
                     }}
                   >
-                    <button
-                      type="button"
-                      disabled={traitement}
-                      onClick={() =>
-                        validerDefi(defi, defi.creator_id)
-                      }
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: 21,
+                      }}
                     >
-                      🏆 Victoire{" "}
-                      {afficherNomJoueur(defi.creator_id)}
-                    </button>
+                      {defi.name}
+                    </h3>
 
-                    <button
-                      type="button"
-                      disabled={traitement}
-                      onClick={() =>
-                        validerDefi(defi, defi.opponent_id)
-                      }
+                    <span
+                      style={{
+                        padding: "6px 9px",
+                        borderRadius: 999,
+                        color: "#bbf7d0",
+                        background: "rgba(34, 197, 94, 0.14)",
+                        fontSize: 12,
+                        fontWeight: 900,
+                      }}
                     >
-                      🏆 Victoire{" "}
-                      {afficherNomJoueur(defi.opponent_id)}
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={traitement}
-                      onClick={() => supprimerDefi(defi)}
-                    >
-                      🗑️ Supprimer
-                    </button>
+                      Terminé
+                    </span>
                   </div>
 
-                  {traitement && <p>Traitement en cours...</p>}
+                  <p
+                    style={{
+                      marginTop: 12,
+                      color: couleurs.texteSecondaire,
+                    }}
+                  >
+                    {afficherNomJoueur(defi.creator_id)}
+                    {" contre "}
+                    {afficherNomJoueur(defi.opponent_id)}
+                  </p>
+
+                  <div
+                    style={{
+                      marginTop: 14,
+                      padding: 13,
+                      border: "1px solid rgba(34, 197, 94, 0.22)",
+                      borderRadius: 12,
+                      color: "#bbf7d0",
+                      background: "rgba(20, 83, 45, 0.18)",
+                    }}
+                  >
+                    🏆 Gagnant :{" "}
+                    <strong>
+                      {afficherNomJoueur(defi.winner_id)}
+                    </strong>
+
+                    <div style={{ marginTop: 5 }}>
+                      {afficherEquipeDuJoueur(defi.winner_id)}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section style={{ marginTop: 38 }}>
+          <h2>Répartition complète</h2>
+
+          <article
+            style={{
+              ...styleCarte,
+              marginTop: 15,
+            }}
+          >
+            <p>
+              Joueurs inscrits :{" "}
+              <strong>{joueurs.length}</strong>
+            </p>
+
+            <p style={{ marginTop: 7 }}>
+              Joueurs sans équipe :{" "}
+              <strong>{joueursSansEquipe.length}</strong>
+            </p>
+
+            <button
+              type="button"
+              onClick={repartirEquipes}
+              disabled={
+                repartitionEnCours ||
+                joueurs.length === 0
+              }
+              style={{
+                ...styleBoutonDanger,
+                width: "100%",
+                marginTop: 15,
+              }}
+            >
+              {repartitionEnCours
+                ? "Répartition en cours..."
+                : "Refaire toute la répartition"}
+            </button>
+
+            <p
+              style={{
+                marginTop: 12,
+                color: "#fca5a5",
+                fontSize: 13,
+              }}
+            >
+              Attention : ce bouton remplace les équipes
+              actuelles de tous les joueurs.
+            </p>
+          </article>
+        </section>
+
+        <section style={{ marginTop: 38 }}>
+          <h2>Composition actuelle</h2>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: 16,
+              marginTop: 15,
+            }}
+          >
+            {equipes.map((equipe) => {
+              const membres = joueurs.filter(
+                (joueur) =>
+                  Number(joueur.team_id) ===
+                  Number(equipe.id)
+              );
+
+              const niveauTotal = membres.reduce(
+                (total, joueur) =>
+                  total +
+                  Number(joueur.sport_level ?? 0),
+                0
+              );
+
+              return (
+                <article key={equipe.id} style={styleCarte}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 12,
+                    }}
+                  >
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: 22,
+                      }}
+                    >
+                      {equipe.flag} {equipe.name}
+                    </h3>
+
+                    <strong>{equipe.score ?? 0} pts</strong>
+                  </div>
+
+                  <p
+                    style={{
+                      marginTop: 9,
+                      color: couleurs.texteSecondaire,
+                    }}
+                  >
+                    {membres.length} joueur
+                    {membres.length > 1 ? "s" : ""}
+                    {" · "}
+                    Niveau total : {niveauTotal}
+                  </p>
+
+                  {membres.length === 0 ? (
+                    <p
+                      style={{
+                        marginTop: 14,
+                        color: couleurs.texteSecondaire,
+                      }}
+                    >
+                      Aucun joueur
+                    </p>
+                  ) : (
+                    <div
+                      style={{
+                        display: "grid",
+                        gap: 9,
+                        marginTop: 14,
+                      }}
+                    >
+                      {membres.map((joueur) => (
+                        <div
+                          key={joueur.id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            flexWrap: "wrap",
+                            gap: 10,
+                            padding: 12,
+                            border: `1px solid ${couleurs.bordure}`,
+                            borderRadius: 12,
+                            background: couleurs.fondSecondaire,
+                          }}
+                        >
+                          <div>
+                            <strong>
+                              {afficherNomComplet(joueur)}
+                            </strong>
+
+                            <div
+                              style={{
+                                marginTop: 4,
+                                color: couleurs.texteSecondaire,
+                                fontSize: 13,
+                              }}
+                            >
+                              Niveau {joueur.sport_level}
+                              {joueur.is_captain
+                                ? " · 👑 Chef"
+                                : ""}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              ouvrirDeplacement(joueur)
+                            }
+                            disabled={
+                              deplacementEnCours === joueur.id
+                            }
+                            style={styleBoutonSecondaire}
+                          >
+                            🔄 Déplacer
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </article>
               );
             })}
           </div>
-        )}
-      </section>
-
-      <section style={{ marginTop: 40 }}>
-        <h2>Défis terminés</h2>
-
-        {defisTermines.length === 0 ? (
-          <p>Aucun défi terminé.</p>
-        ) : (
-          <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
-            {defisTermines.map((defi) => (
-              <article
-                key={defi.id}
-                style={{
-                  padding: 16,
-                  border: "1px solid #ddd",
-                  borderRadius: 12,
-                  background: "white",
-                }}
-              >
-                <strong>{defi.name}</strong>
-
-                <p>
-                  {afficherNomJoueur(defi.creator_id)} contre{" "}
-                  {afficherNomJoueur(defi.opponent_id)}
-                </p>
-
-                <p>
-                  Gagnant :{" "}
-                  <strong>
-                    🏆 {afficherNomJoueur(defi.winner_id)}
-                  </strong>
-                </p>
-
-                <p>
-                  Équipe gagnante :{" "}
-                  {afficherEquipeDuJoueur(defi.winner_id)}
-                </p>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section style={{ marginTop: 40 }}>
-        <h2>Répartition complète</h2>
-
-        <p>Joueurs inscrits : {joueurs.length}</p>
-        <p>Joueurs sans équipe : {joueursSansEquipe.length}</p>
-
-        <button
-          type="button"
-          onClick={repartirEquipes}
-          disabled={repartitionEnCours || joueurs.length === 0}
-        >
-          {repartitionEnCours
-            ? "Répartition en cours..."
-            : "Refaire toute la répartition"}
-        </button>
-
-        <p
-          style={{
-            marginTop: 10,
-            fontSize: 13,
-            color: "#666",
-          }}
-        >
-          Attention : ce bouton remplace les équipes actuelles de
-          tous les joueurs.
-        </p>
-      </section>
-
-      <section style={{ marginTop: 40 }}>
-        <h2>Composition actuelle</h2>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: 16,
-            marginTop: 20,
-          }}
-        >
-          {equipes.map((equipe) => {
-            const membres = joueurs.filter(
-              (joueur) =>
-                Number(joueur.team_id) === Number(equipe.id)
-            );
-
-            const niveauTotal = membres.reduce(
-              (total, joueur) =>
-                total + Number(joueur.sport_level ?? 0),
-              0
-            );
-
-            return (
-              <article
-                key={equipe.id}
-                style={{
-                  padding: 18,
-                  border: "1px solid #ddd",
-                  borderRadius: 12,
-                  background: "white",
-                }}
-              >
-                <h3>
-                  {equipe.flag} {equipe.name}
-                </h3>
-
-                <p>
-                  {membres.length} joueur
-                  {membres.length > 1 ? "s" : ""}
-                </p>
-
-                <p>Niveau total : {niveauTotal}</p>
-
-                {membres.length === 0 ? (
-                  <p>Aucun joueur</p>
-                ) : (
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: 10,
-                      marginTop: 14,
-                    }}
-                  >
-                    {membres.map((joueur) => (
-                      <div
-                        key={joueur.id}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 10,
-                          padding: 11,
-                          border: "1px solid #e5e7eb",
-                          borderRadius: 10,
-                          background: "#f8fafc",
-                        }}
-                      >
-                        <div>
-                          <strong>
-                            {afficherNomComplet(joueur)}
-                          </strong>
-
-                          <div
-                            style={{
-                              marginTop: 4,
-                              fontSize: 13,
-                              color: "#666",
-                            }}
-                          >
-                            Niveau {joueur.sport_level}
-                            {joueur.is_captain
-                              ? " — Chef d’équipe"
-                              : ""}
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => ouvrirDeplacement(joueur)}
-                          disabled={
-                            deplacementEnCours === joueur.id
-                          }
-                        >
-                          🔄 Déplacer
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </article>
-            );
-          })}
-        </div>
-      </section>
+        </section>
+      </div>
 
       {joueurADeplacer && (
         <div
           role="dialog"
           aria-modal="true"
+          onClick={fermerDeplacement}
           style={{
             position: "fixed",
             inset: 0,
-            zIndex: 1000,
+            zIndex: 1500,
             display: "grid",
             placeItems: "center",
-            padding: 20,
-            background: "rgba(0, 0, 0, 0.55)",
+            padding: 18,
+            background: "rgba(0, 0, 0, 0.72)",
           }}
-          onClick={fermerDeplacement}
         >
           <section
+            onClick={(event) =>
+              event.stopPropagation()
+            }
             style={{
+              ...styleCarte,
               width: "100%",
               maxWidth: 460,
-              padding: 22,
-              borderRadius: 16,
-              background: "white",
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+              maxHeight: "85vh",
+              overflowY: "auto",
             }}
-            onClick={(event) => event.stopPropagation()}
           >
             <h2 style={{ marginTop: 0 }}>
-              Déplacer {afficherNomComplet(joueurADeplacer)}
+              Déplacer{" "}
+              {afficherNomComplet(joueurADeplacer)}
             </h2>
 
-            <p>
+            <p style={{ color: couleurs.texteSecondaire }}>
               Équipe actuelle :{" "}
               <strong>
-                {afficherEquipeDuJoueur(joueurADeplacer.id)}
+                {afficherEquipeDuJoueur(
+                  joueurADeplacer.id
+                )}
               </strong>
             </p>
 
-            <label>
+            <label
+              style={{
+                display: "block",
+                marginTop: 18,
+                fontWeight: 800,
+              }}
+            >
               Nouvelle équipe
+
               <select
                 value={nouvelleEquipeId}
                 onChange={(event) =>
                   setNouvelleEquipeId(event.target.value)
                 }
                 disabled={
-                  deplacementEnCours === joueurADeplacer.id
+                  deplacementEnCours ===
+                  joueurADeplacer.id
                 }
                 style={{
-                  boxSizing: "border-box",
-                  display: "block",
-                  width: "100%",
-                  padding: 12,
+                  ...styleChamp,
                   marginTop: 8,
-                  marginBottom: 16,
                 }}
               >
-                <option value="">Choisir une équipe</option>
+                <option value="">
+                  Choisir une équipe
+                </option>
 
                 {equipes
                   .filter(
@@ -1227,10 +1528,15 @@ export default function Admin() {
                       Number(joueurADeplacer.team_id)
                   )
                   .map((equipe) => (
-                    <option key={equipe.id} value={equipe.id}>
+                    <option
+                      key={equipe.id}
+                      value={equipe.id}
+                    >
                       {equipe.flag} {equipe.name} —{" "}
                       {nombreMembresEquipe(equipe.id)} joueur
-                      {nombreMembresEquipe(equipe.id) > 1 ? "s" : ""}
+                      {nombreMembresEquipe(equipe.id) > 1
+                        ? "s"
+                        : ""}
                     </option>
                   ))}
               </select>
@@ -1238,9 +1544,9 @@ export default function Admin() {
 
             <div
               style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 10,
+                display: "grid",
+                gap: 9,
+                marginTop: 16,
               }}
             >
               <button
@@ -1248,10 +1554,13 @@ export default function Admin() {
                 onClick={confirmerDeplacement}
                 disabled={
                   !nouvelleEquipeId ||
-                  deplacementEnCours === joueurADeplacer.id
+                  deplacementEnCours ===
+                    joueurADeplacer.id
                 }
+                style={styleBoutonPrincipal}
               >
-                {deplacementEnCours === joueurADeplacer.id
+                {deplacementEnCours ===
+                joueurADeplacer.id
                   ? "Déplacement..."
                   : "Confirmer le déplacement"}
               </button>
@@ -1260,8 +1569,10 @@ export default function Admin() {
                 type="button"
                 onClick={fermerDeplacement}
                 disabled={
-                  deplacementEnCours === joueurADeplacer.id
+                  deplacementEnCours ===
+                  joueurADeplacer.id
                 }
+                style={styleBoutonSecondaire}
               >
                 Annuler
               </button>
