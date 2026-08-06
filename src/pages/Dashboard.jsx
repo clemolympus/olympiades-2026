@@ -50,6 +50,8 @@ export default function Dashboard() {
   const [erreur, setErreur] = useState("");
 
   const [notification, setNotification] = useState(null);
+  const [equipeRevelee, setEquipeRevelee] = useState(null);
+
   const [animationPoints, setAnimationPoints] = useState(false);
   const [animationVictoires, setAnimationVictoires] =
     useState(false);
@@ -137,6 +139,13 @@ export default function Dashboard() {
     const nouveauxDefis =
       etatResponse.data?.challenges ?? [];
 
+    detecterAttributionEquipe(
+      Number(playerId),
+      profil,
+      nouveauxJoueurs,
+      nouvellesEquipes
+    );
+
     detecterNouveauDefiValide(
       nouveauxDefis,
       nouveauxJoueurs,
@@ -150,6 +159,59 @@ export default function Dashboard() {
     setDefis(nouveauxDefis);
     setErreur("");
     setChargement(false);
+  }
+
+  function detecterAttributionEquipe(
+    playerId,
+    profil,
+    nouveauxJoueurs,
+    nouvellesEquipes
+  ) {
+    const joueurActuel =
+      nouveauxJoueurs.find(
+        (element) =>
+          Number(element.id) === Number(playerId)
+      ) ?? profil;
+
+    const equipeId = joueurActuel?.team_id
+      ? Number(joueurActuel.team_id)
+      : null;
+
+    const cleMemoire =
+      `olympiades_equipe_revelee_${playerId}`;
+
+    if (!equipeId) {
+      sessionStorage.removeItem(cleMemoire);
+      return;
+    }
+
+    const equipeDejaVue = Number(
+      sessionStorage.getItem(cleMemoire) || 0
+    );
+
+    if (equipeDejaVue === equipeId) {
+      return;
+    }
+
+    const equipeAttribuee = nouvellesEquipes.find(
+      (equipe) =>
+        Number(equipe.id) === equipeId
+    );
+
+    if (!equipeAttribuee) {
+      return;
+    }
+
+    sessionStorage.setItem(
+      cleMemoire,
+      String(equipeId)
+    );
+
+    setEquipeRevelee(equipeAttribuee);
+  }
+
+  function fermerRevelationEquipe() {
+    setEquipeRevelee(null);
   }
 
   function detecterNouveauDefiValide(
@@ -757,6 +819,123 @@ export default function Dashboard() {
           "radial-gradient(circle at top, #17164f 0%, #080d20 38%, #020617 100%)",
       }}
     >
+      {equipeRevelee && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Révélation de ton équipe"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 5000,
+            display: "grid",
+            placeItems: "center",
+            padding: 24,
+            overflow: "hidden",
+            color: "#f8fafc",
+            textAlign: "center",
+            background:
+              "radial-gradient(circle at center, #312e81 0%, #111047 40%, #020617 82%)",
+            animation:
+              "apparitionEquipe 0.45s ease",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: 0.32,
+              background:
+                "radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.8), transparent 23%), radial-gradient(circle at 80% 75%, rgba(59, 130, 246, 0.6), transparent 25%)",
+            }}
+          />
+
+          <section
+            style={{
+              position: "relative",
+              width: "100%",
+              maxWidth: 520,
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                color: "#c4b5fd",
+                fontSize: 14,
+                fontWeight: 900,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+              }}
+            >
+              Ton équipe est...
+            </p>
+
+            <div
+              style={{
+                marginTop: 20,
+                fontSize:
+                  "clamp(120px, 35vw, 210px)",
+                lineHeight: 1,
+                filter:
+                  "drop-shadow(0 18px 35px rgba(0, 0, 0, 0.45))",
+                animation:
+                  "drapeauEquipe 0.75s cubic-bezier(.2,.9,.25,1.2)",
+              }}
+            >
+              {equipeRevelee.flag}
+            </div>
+
+            <h1
+              style={{
+                margin: "24px 0 0",
+                fontSize:
+                  "clamp(36px, 10vw, 62px)",
+                lineHeight: 1,
+                textTransform: "uppercase",
+                textShadow:
+                  "0 10px 30px rgba(0, 0, 0, 0.4)",
+              }}
+            >
+              {equipeRevelee.name}
+            </h1>
+
+            <p
+              style={{
+                margin: "15px 0 0",
+                color: "#cbd5e1",
+                fontSize: 17,
+              }}
+            >
+              Bienvenue dans ta nation. Fais-la gagner !
+            </p>
+
+            <button
+              type="button"
+              onClick={fermerRevelationEquipe}
+              style={{
+                width: "100%",
+                maxWidth: 360,
+                marginTop: 30,
+                padding: "15px 18px",
+                border:
+                  "1px solid rgba(196, 181, 253, 0.45)",
+                borderRadius: 14,
+                color: "white",
+                background:
+                  "linear-gradient(135deg, #7c3aed, #4f46e5)",
+                boxShadow:
+                  "0 16px 40px rgba(76, 29, 149, 0.38)",
+                fontSize: 16,
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+            >
+              Découvrir mon équipe
+            </button>
+          </section>
+        </div>
+      )}
+
       {notification && (
         <div
           style={{
@@ -813,6 +992,33 @@ export default function Dashboard() {
             to {
               opacity: 1;
               transform: translate(-50%, 0);
+            }
+          }
+
+          @keyframes apparitionEquipe {
+            from {
+              opacity: 0;
+            }
+
+            to {
+              opacity: 1;
+            }
+          }
+
+          @keyframes drapeauEquipe {
+            0% {
+              opacity: 0;
+              transform: scale(0.25) rotate(-8deg);
+            }
+
+            70% {
+              opacity: 1;
+              transform: scale(1.08) rotate(2deg);
+            }
+
+            100% {
+              opacity: 1;
+              transform: scale(1) rotate(0);
             }
           }
         `}
