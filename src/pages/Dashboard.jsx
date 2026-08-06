@@ -54,6 +54,8 @@ export default function Dashboard() {
   const [animationVictoires, setAnimationVictoires] =
     useState(false);
   const [animationEquipe, setAnimationEquipe] = useState(false);
+  const [deconnexionEnCours, setDeconnexionEnCours] =
+    useState(false);
 
   const [sonsActifs, setSonsActifs] = useState(
     localStorage.getItem("olympiades_sons") !== "false"
@@ -71,31 +73,38 @@ export default function Dashboard() {
   useEffect(() => {
     chargerDonnees();
 
-    const intervalle = window.setInterval(chargerDonnees, 5000);
+    const intervalle = window.setInterval(
+      chargerDonnees,
+      5000
+    );
 
     return () => {
       window.clearInterval(intervalle);
 
       if (minuterieNotification.current) {
-        window.clearTimeout(minuterieNotification.current);
+        window.clearTimeout(
+          minuterieNotification.current
+        );
       }
     };
   }, []);
 
   async function chargerDonnees() {
-    const playerId = sessionStorage.getItem("player_id");
+    const playerId =
+      sessionStorage.getItem("player_id");
 
     if (!playerId) {
       navigate("/connexion");
       return;
     }
 
-    const [profilResponse, etatResponse] = await Promise.all([
-      supabase.rpc("get_player_profile", {
-        p_player_id: Number(playerId),
-      }),
-      supabase.rpc("get_state"),
-    ]);
+    const [profilResponse, etatResponse] =
+      await Promise.all([
+        supabase.rpc("get_player_profile", {
+          p_player_id: Number(playerId),
+        }),
+        supabase.rpc("get_state"),
+      ]);
 
     if (profilResponse.error) {
       console.error(profilResponse.error);
@@ -119,9 +128,14 @@ export default function Dashboard() {
       return;
     }
 
-    const nouveauxJoueurs = etatResponse.data?.players ?? [];
-    const nouvellesEquipes = etatResponse.data?.teams ?? [];
-    const nouveauxDefis = etatResponse.data?.challenges ?? [];
+    const nouveauxJoueurs =
+      etatResponse.data?.players ?? [];
+
+    const nouvellesEquipes =
+      etatResponse.data?.teams ?? [];
+
+    const nouveauxDefis =
+      etatResponse.data?.challenges ?? [];
 
     detecterNouveauDefiValide(
       nouveauxDefis,
@@ -152,7 +166,9 @@ export default function Dashboard() {
 
     if (!initialisationTerminee.current) {
       idsDefisValidesConnus.current = new Set(
-        defisValides.map((defi) => Number(defi.id))
+        defisValides.map((defi) =>
+          Number(defi.id)
+        )
       );
 
       initialisationTerminee.current = true;
@@ -161,18 +177,25 @@ export default function Dashboard() {
 
     const nouveauDefi = defisValides.find(
       (defi) =>
-        !idsDefisValidesConnus.current.has(Number(defi.id))
+        !idsDefisValidesConnus.current.has(
+          Number(defi.id)
+        )
     );
 
     defisValides.forEach((defi) => {
-      idsDefisValidesConnus.current.add(Number(defi.id));
+      idsDefisValidesConnus.current.add(
+        Number(defi.id)
+      );
     });
 
-    if (!nouveauDefi) return;
+    if (!nouveauDefi) {
+      return;
+    }
 
     const gagnant = nouveauxJoueurs.find(
       (element) =>
-        Number(element.id) === Number(nouveauDefi.winner_id)
+        Number(element.id) ===
+        Number(nouveauDefi.winner_id)
     );
 
     const equipeGagnante = nouvellesEquipes.find(
@@ -190,43 +213,58 @@ export default function Dashboard() {
       Number(nouveauDefi.witness_id) === playerId;
 
     const joueurActuel = nouveauxJoueurs.find(
-      (element) => Number(element.id) === playerId
+      (element) =>
+        Number(element.id) === playerId
     );
 
     const concerneEquipe =
       Boolean(equipeGagnante?.id) &&
-      Number(joueurActuel?.team_id) === Number(equipeGagnante.id);
+      Number(joueurActuel?.team_id) ===
+        Number(equipeGagnante.id);
 
     afficherNotification({
-      titre: `${gagnant?.first_name ?? "Un joueur"} remporte son défi`,
+      titre: `${
+        gagnant?.first_name ?? "Un joueur"
+      } remporte son défi`,
       texte: equipeGagnante
         ? `${equipeGagnante.flag} ${equipeGagnante.name} gagne 1 point.`
         : "Le classement vient d’être mis à jour.",
     });
 
-    if (sonsActifs && (concerneJoueur || concerneEquipe)) {
+    if (
+      sonsActifs &&
+      (concerneJoueur || concerneEquipe)
+    ) {
       jouerApplaudissements();
     }
   }
 
-  function afficherNotification(nouvelleNotification) {
+  function afficherNotification(
+    nouvelleNotification
+  ) {
     setNotification(nouvelleNotification);
 
     if (minuterieNotification.current) {
-      window.clearTimeout(minuterieNotification.current);
+      window.clearTimeout(
+        minuterieNotification.current
+      );
     }
 
-    minuterieNotification.current = window.setTimeout(() => {
-      setNotification(null);
-    }, 5000);
+    minuterieNotification.current =
+      window.setTimeout(() => {
+        setNotification(null);
+      }, 5000);
   }
 
   function jouerApplaudissements() {
     try {
       const AudioContext =
-        window.AudioContext || window.webkitAudioContext;
+        window.AudioContext ||
+        window.webkitAudioContext;
 
-      if (!AudioContext) return;
+      if (!AudioContext) {
+        return;
+      }
 
       const contexte = new AudioContext();
 
@@ -243,7 +281,8 @@ export default function Dashboard() {
         index += 1
       ) {
         const debut =
-          contexte.currentTime + Math.random() * duree;
+          contexte.currentTime +
+          Math.random() * duree;
 
         const buffer = contexte.createBuffer(
           1,
@@ -251,7 +290,8 @@ export default function Dashboard() {
           contexte.sampleRate
         );
 
-        const donnees = buffer.getChannelData(0);
+        const donnees =
+          buffer.getChannelData(0);
 
         for (
           let echantillon = 0;
@@ -261,14 +301,21 @@ export default function Dashboard() {
           donnees[echantillon] =
             (Math.random() * 2 - 1) *
             Math.pow(
-              1 - echantillon / donnees.length,
+              1 -
+                echantillon /
+                  donnees.length,
               2
             );
         }
 
-        const source = contexte.createBufferSource();
-        const filtre = contexte.createBiquadFilter();
-        const gain = contexte.createGain();
+        const source =
+          contexte.createBufferSource();
+
+        const filtre =
+          contexte.createBiquadFilter();
+
+        const gain =
+          contexte.createGain();
 
         source.buffer = buffer;
 
@@ -326,12 +373,16 @@ export default function Dashboard() {
         ...equipe,
         membres: joueurs.filter(
           (membre) =>
-            Number(membre.team_id) === Number(equipe.id)
+            Number(membre.team_id) ===
+            Number(equipe.id)
         ),
-        scoreTotal: Number(equipe.score ?? 0),
+        scoreTotal: Number(
+          equipe.score ?? 0
+        ),
       }))
       .sort((a, b) => {
-        const difference = b.scoreTotal - a.scoreTotal;
+        const difference =
+          b.scoreTotal - a.scoreTotal;
 
         if (difference !== 0) {
           return difference;
@@ -346,19 +397,22 @@ export default function Dashboard() {
 
   const monEquipe = classement.find(
     (equipe) =>
-      Number(equipe.id) === Number(joueur?.team_id)
+      Number(equipe.id) ===
+      Number(joueur?.team_id)
   );
 
   const positionEquipe =
     classement.findIndex(
       (equipe) =>
-        Number(equipe.id) === Number(joueur?.team_id)
+        Number(equipe.id) ===
+        Number(joueur?.team_id)
     ) + 1;
 
   const monProfilComplet =
     joueurs.find(
       (membre) =>
-        Number(membre.id) === Number(joueur?.id)
+        Number(membre.id) ===
+        Number(joueur?.id)
     ) ?? joueur;
 
   const pointsJoueur = Number(
@@ -370,99 +424,145 @@ export default function Dashboard() {
   );
 
   useEffect(() => {
-    if (anciensPointsJoueur.current === null) {
-      anciensPointsJoueur.current = pointsJoueur;
+    if (
+      anciensPointsJoueur.current === null
+    ) {
+      anciensPointsJoueur.current =
+        pointsJoueur;
       return;
     }
 
-    if (anciensPointsJoueur.current !== pointsJoueur) {
+    if (
+      anciensPointsJoueur.current !==
+      pointsJoueur
+    ) {
       setAnimationPoints(true);
 
-      const minuterie = window.setTimeout(() => {
-        setAnimationPoints(false);
-      }, 650);
+      const minuterie =
+        window.setTimeout(() => {
+          setAnimationPoints(false);
+        }, 650);
 
-      anciensPointsJoueur.current = pointsJoueur;
+      anciensPointsJoueur.current =
+        pointsJoueur;
 
-      return () => window.clearTimeout(minuterie);
+      return () =>
+        window.clearTimeout(minuterie);
     }
   }, [pointsJoueur]);
 
   useEffect(() => {
-    if (anciennesVictoires.current === null) {
-      anciennesVictoires.current = victoires;
+    if (
+      anciennesVictoires.current === null
+    ) {
+      anciennesVictoires.current =
+        victoires;
       return;
     }
 
-    if (anciennesVictoires.current !== victoires) {
+    if (
+      anciennesVictoires.current !==
+      victoires
+    ) {
       setAnimationVictoires(true);
 
-      const minuterie = window.setTimeout(() => {
-        setAnimationVictoires(false);
-      }, 650);
+      const minuterie =
+        window.setTimeout(() => {
+          setAnimationVictoires(false);
+        }, 650);
 
-      anciennesVictoires.current = victoires;
+      anciennesVictoires.current =
+        victoires;
 
-      return () => window.clearTimeout(minuterie);
+      return () =>
+        window.clearTimeout(minuterie);
     }
   }, [victoires]);
 
   useEffect(() => {
-    const scoreEquipe = monEquipe?.scoreTotal ?? null;
+    const scoreEquipe =
+      monEquipe?.scoreTotal ?? null;
 
-    if (scoreEquipe === null) return;
-
-    if (anciensPointsEquipe.current === null) {
-      anciensPointsEquipe.current = scoreEquipe;
+    if (scoreEquipe === null) {
       return;
     }
 
-    if (anciensPointsEquipe.current !== scoreEquipe) {
+    if (
+      anciensPointsEquipe.current === null
+    ) {
+      anciensPointsEquipe.current =
+        scoreEquipe;
+      return;
+    }
+
+    if (
+      anciensPointsEquipe.current !==
+      scoreEquipe
+    ) {
       setAnimationEquipe(true);
 
-      const minuterie = window.setTimeout(() => {
-        setAnimationEquipe(false);
-      }, 650);
+      const minuterie =
+        window.setTimeout(() => {
+          setAnimationEquipe(false);
+        }, 650);
 
-      anciensPointsEquipe.current = scoreEquipe;
+      anciensPointsEquipe.current =
+        scoreEquipe;
 
-      return () => window.clearTimeout(minuterie);
+      return () =>
+        window.clearTimeout(minuterie);
     }
   }, [monEquipe?.scoreTotal]);
 
   const mesDefis = useMemo(() => {
-    if (!joueur) return [];
+    if (!joueur) {
+      return [];
+    }
 
     return defis
       .filter(
         (defi) =>
-          Number(defi.creator_id) === Number(joueur.id) ||
-          Number(defi.opponent_id) === Number(joueur.id) ||
-          Number(defi.witness_id) === Number(joueur.id)
+          Number(defi.creator_id) ===
+            Number(joueur.id) ||
+          Number(defi.opponent_id) ===
+            Number(joueur.id) ||
+          Number(defi.witness_id) ===
+            Number(joueur.id)
       )
       .sort(
         (a, b) =>
-          new Date(b.created_at ?? 0) -
-          new Date(a.created_at ?? 0)
+          new Date(
+            b.created_at ?? 0
+          ) -
+          new Date(
+            a.created_at ?? 0
+          )
       );
   }, [defis, joueur]);
 
   const defiEnAttente = mesDefis.find(
-    (defi) => defi.status === "pending"
+    (defi) =>
+      defi.status === "pending"
   );
 
-  const dernierDefi = defiEnAttente ?? mesDefis[0];
+  const dernierDefi =
+    defiEnAttente ?? mesDefis[0];
 
   function trouverJoueur(id) {
     return joueurs.find(
-      (element) => Number(element.id) === Number(id)
+      (element) =>
+        Number(element.id) ===
+        Number(id)
     );
   }
 
   function nomJoueur(id) {
-    const joueurTrouve = trouverJoueur(id);
+    const joueurTrouve =
+      trouverJoueur(id);
 
-    if (!joueurTrouve) return "Joueur inconnu";
+    if (!joueurTrouve) {
+      return "Joueur inconnu";
+    }
 
     return joueurTrouve.nickname
       ? `${joueurTrouve.first_name} — ${joueurTrouve.nickname}`
@@ -470,23 +570,33 @@ export default function Dashboard() {
   }
 
   function adversaireDuDefi(defi) {
-    if (!defi) return "";
-
-    if (
-      Number(defi.creator_id) === Number(joueur.id)
-    ) {
-      return nomJoueur(defi.opponent_id);
+    if (!defi) {
+      return "";
     }
 
     if (
-      Number(defi.opponent_id) === Number(joueur.id)
+      Number(defi.creator_id) ===
+      Number(joueur.id)
     ) {
-      return nomJoueur(defi.creator_id);
+      return nomJoueur(
+        defi.opponent_id
+      );
+    }
+
+    if (
+      Number(defi.opponent_id) ===
+      Number(joueur.id)
+    ) {
+      return nomJoueur(
+        defi.creator_id
+      );
     }
 
     return `${nomJoueur(
       defi.creator_id
-    )} contre ${nomJoueur(defi.opponent_id)}`;
+    )} contre ${nomJoueur(
+      defi.opponent_id
+    )}`;
   }
 
   function statutDuDefi(defi) {
@@ -507,7 +617,8 @@ export default function Dashboard() {
     }
 
     if (
-      Number(defi.winner_id) === Number(joueur.id)
+      Number(defi.winner_id) ===
+      Number(joueur.id)
     ) {
       return {
         texte: "Gagné",
@@ -524,13 +635,54 @@ export default function Dashboard() {
   }
 
   function textePosition(position) {
-    if (position === 1) return "1re";
+    if (position === 1) {
+      return "1re";
+    }
+
     return `${position}e`;
   }
 
-  function seDeconnecter() {
+  async function seDeconnecter() {
+    if (deconnexionEnCours) {
+      return;
+    }
+
+    setDeconnexionEnCours(true);
+
+    const playerId =
+      sessionStorage.getItem("player_id");
+
+    const playerToken =
+      sessionStorage.getItem("player_token");
+
+    if (playerId && playerToken) {
+      const { error } = await supabase.rpc(
+        "logout_player",
+        {
+          p_player_id: Number(playerId),
+          p_token: playerToken,
+        }
+      );
+
+      if (error) {
+        console.error(
+          "Erreur pendant la déconnexion :",
+          error
+        );
+
+        setDeconnexionEnCours(false);
+
+        alert(
+          "La déconnexion n’a pas pu être effectuée. Réessaie."
+        );
+
+        return;
+      }
+    }
+
     sessionStorage.removeItem("player_id");
     sessionStorage.removeItem("player_token");
+
     navigate("/");
   }
 
@@ -570,11 +722,16 @@ export default function Dashboard() {
           background: couleurs.fond,
         }}
       >
-        <h1>Une erreur est survenue</h1>
+        <h1>
+          Une erreur est survenue
+        </h1>
+
         <p>{erreur}</p>
 
         <PrimaryButton
-          onClick={() => navigate("/connexion")}
+          onClick={() =>
+            navigate("/connexion")
+          }
         >
           Retour à la connexion
         </PrimaryButton>
@@ -582,7 +739,8 @@ export default function Dashboard() {
     );
   }
 
-  const statut = statutDuDefi(dernierDefi);
+  const statut =
+    statutDuDefi(dernierDefi);
 
   return (
     <main
@@ -601,22 +759,29 @@ export default function Dashboard() {
             top: 16,
             left: "50%",
             zIndex: 2000,
-            width: "calc(100% - 28px)",
+            width:
+              "calc(100% - 28px)",
             maxWidth: 520,
             padding: "13px 15px",
             border:
               "1px solid rgba(34, 197, 94, 0.35)",
             borderRadius: 13,
             color: "#f0fdf4",
-            background: "rgba(20, 83, 45, 0.98)",
+            background:
+              "rgba(20, 83, 45, 0.98)",
             boxShadow:
               "0 12px 35px rgba(0, 0, 0, 0.3)",
-            transform: "translateX(-50%)",
+            transform:
+              "translateX(-50%)",
             animation:
               "olympiadesNotification 0.3s ease",
           }}
         >
-          <strong style={{ display: "block" }}>
+          <strong
+            style={{
+              display: "block",
+            }}
+          >
             {notification.titre}
           </strong>
 
@@ -648,27 +813,44 @@ export default function Dashboard() {
         `}
       </style>
 
-      <div style={{ maxWidth: 760, margin: "0 auto" }}>
+      <div
+        style={{
+          maxWidth: 760,
+          margin: "0 auto",
+        }}
+      >
         <LivePodium />
 
-        <header style={{ margin: "20px 0 16px" }}>
+        <header
+          style={{
+            margin: "20px 0 16px",
+          }}
+        >
           <div
             style={{
               display: "flex",
               alignItems: "flex-start",
-              justifyContent: "space-between",
+              justifyContent:
+                "space-between",
               gap: 12,
             }}
           >
-            <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                minWidth: 0,
+              }}
+            >
               <p
                 style={{
                   margin: 0,
-                  color: couleurs.violet,
+                  color:
+                    couleurs.violet,
                   fontSize: 12,
                   fontWeight: 900,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
+                  letterSpacing:
+                    "0.08em",
+                  textTransform:
+                    "uppercase",
                 }}
               >
                 Olympiades 2026
@@ -677,11 +859,13 @@ export default function Dashboard() {
               <h1
                 style={{
                   margin: "5px 0 0",
-                  fontSize: "clamp(27px, 7vw, 40px)",
+                  fontSize:
+                    "clamp(27px, 7vw, 40px)",
                   lineHeight: 1.08,
                 }}
               >
-                Bonjour {joueur.first_name}
+                Bonjour{" "}
+                {joueur.first_name}
               </h1>
             </div>
 
@@ -706,7 +890,8 @@ export default function Dashboard() {
                 color: sonsActifs
                   ? couleurs.violetClair
                   : couleurs.secondaire,
-                background: couleurs.carte,
+                background:
+                  couleurs.carte,
                 cursor: "pointer",
               }}
             >
@@ -730,7 +915,9 @@ export default function Dashboard() {
               gap: 14,
               padding: "14px 16px",
               ...styleAnimation,
-              ...(animationEquipe ? styleRebond : {}),
+              ...(animationEquipe
+                ? styleRebond
+                : {}),
             }}
           >
             <div
@@ -751,14 +938,20 @@ export default function Dashboard() {
                 {monEquipe.flag}
               </span>
 
-              <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  minWidth: 0,
+                }}
+              >
                 <strong
                   style={{
                     display: "block",
                     overflow: "hidden",
                     fontSize: 18,
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
+                    textOverflow:
+                      "ellipsis",
+                    whiteSpace:
+                      "nowrap",
                   }}
                 >
                   {monEquipe.name}
@@ -770,12 +963,17 @@ export default function Dashboard() {
                     alignItems: "center",
                     gap: 5,
                     marginTop: 3,
-                    color: couleurs.secondaire,
+                    color:
+                      couleurs.secondaire,
                     fontSize: 12,
                   }}
                 >
                   <Medal size={14} />
-                  {textePosition(positionEquipe)} au classement
+
+                  {textePosition(
+                    positionEquipe
+                  )}{" "}
+                  au classement
                 </div>
               </div>
             </div>
@@ -798,9 +996,11 @@ export default function Dashboard() {
 
               <span
                 style={{
-                  color: couleurs.secondaire,
+                  color:
+                    couleurs.secondaire,
                   fontSize: 10,
-                  textTransform: "uppercase",
+                  textTransform:
+                    "uppercase",
                 }}
               >
                 points
@@ -814,16 +1014,20 @@ export default function Dashboard() {
               padding: 16,
             }}
           >
-            <strong>Répartition à venir</strong>
+            <strong>
+              Répartition à venir
+            </strong>
 
             <p
               style={{
                 margin: "4px 0 0",
-                color: couleurs.secondaire,
+                color:
+                  couleurs.secondaire,
                 fontSize: 13,
               }}
             >
-              Les équipes ne sont pas encore constituées.
+              Les équipes ne sont pas
+              encore constituées.
             </p>
           </section>
         )}
@@ -850,7 +1054,9 @@ export default function Dashboard() {
                 padding: "13px 14px",
                 borderRight: `1px solid ${couleurs.bordure}`,
                 ...styleAnimation,
-                ...(animationPoints ? styleRebond : {}),
+                ...(animationPoints
+                  ? styleRebond
+                  : {}),
               }}
             >
               <Star
@@ -872,7 +1078,8 @@ export default function Dashboard() {
 
                 <span
                   style={{
-                    color: couleurs.secondaire,
+                    color:
+                      couleurs.secondaire,
                     fontSize: 11,
                   }}
                 >
@@ -895,7 +1102,9 @@ export default function Dashboard() {
             >
               <Trophy
                 size={20}
-                color={couleurs.violetClair}
+                color={
+                  couleurs.violetClair
+                }
               />
 
               <div>
@@ -907,9 +1116,11 @@ export default function Dashboard() {
                   }}
                 >
                   {victoires}
+
                   <span
                     style={{
-                      color: couleurs.secondaire,
+                      color:
+                        couleurs.secondaire,
                       fontSize: 12,
                     }}
                   >
@@ -919,7 +1130,8 @@ export default function Dashboard() {
 
                 <span
                   style={{
-                    color: couleurs.secondaire,
+                    color:
+                      couleurs.secondaire,
                     fontSize: 11,
                   }}
                 >
@@ -942,11 +1154,13 @@ export default function Dashboard() {
               display: "flex",
               alignItems: "center",
               gap: 7,
-              color: couleurs.violetClair,
+              color:
+                couleurs.violetClair,
               fontSize: 11,
               fontWeight: 900,
               letterSpacing: "0.06em",
-              textTransform: "uppercase",
+              textTransform:
+                "uppercase",
             }}
           >
             <Swords size={15} />
@@ -963,13 +1177,18 @@ export default function Dashboard() {
               marginTop: 10,
             }}
           >
-            <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                minWidth: 0,
+              }}
+            >
               <strong
                 style={{
                   display: "block",
                   overflow: "hidden",
                   fontSize: 16,
-                  textOverflow: "ellipsis",
+                  textOverflow:
+                    "ellipsis",
                   whiteSpace: "nowrap",
                 }}
               >
@@ -981,9 +1200,11 @@ export default function Dashboard() {
                 style={{
                   marginTop: 3,
                   overflow: "hidden",
-                  color: couleurs.secondaire,
+                  color:
+                    couleurs.secondaire,
                   fontSize: 12,
-                  textOverflow: "ellipsis",
+                  textOverflow:
+                    "ellipsis",
                   whiteSpace: "nowrap",
                 }}
               >
@@ -1011,18 +1232,23 @@ export default function Dashboard() {
 
           <button
             type="button"
-            onClick={() => navigate("/defis")}
+            onClick={() =>
+              navigate("/defis")
+            }
             style={{
               display: "flex",
               width: "100%",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent:
+                "space-between",
               marginTop: 12,
               padding: "10px 0 0",
               border: 0,
               borderTop: `1px solid ${couleurs.bordure}`,
-              color: couleurs.violetClair,
-              background: "transparent",
+              color:
+                couleurs.violetClair,
+              background:
+                "transparent",
               fontWeight: 800,
               cursor: "pointer",
             }}
@@ -1046,11 +1272,14 @@ export default function Dashboard() {
                 alignItems: "center",
                 gap: 7,
                 marginBottom: 9,
-                color: couleurs.secondaire,
+                color:
+                  couleurs.secondaire,
                 fontSize: 11,
                 fontWeight: 900,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
+                letterSpacing:
+                  "0.06em",
+                textTransform:
+                  "uppercase",
               }}
             >
               <Users size={15} />
@@ -1064,8 +1293,10 @@ export default function Dashboard() {
                     key={membre.id}
                     style={{
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
+                      alignItems:
+                        "center",
+                      justifyContent:
+                        "space-between",
                       gap: 10,
                       minHeight: 38,
                       padding: "7px 0",
@@ -1078,14 +1309,20 @@ export default function Dashboard() {
                     <span
                       style={{
                         minWidth: 0,
-                        overflow: "hidden",
+                        overflow:
+                          "hidden",
                         fontSize: 14,
                         fontWeight: 700,
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
+                        textOverflow:
+                          "ellipsis",
+                        whiteSpace:
+                          "nowrap",
                       }}
                     >
-                      {membre.first_name}
+                      {
+                        membre.first_name
+                      }
+
                       {membre.nickname
                         ? ` — ${membre.nickname}`
                         : ""}
@@ -1095,7 +1332,8 @@ export default function Dashboard() {
                       <span
                         style={{
                           flexShrink: 0,
-                          color: "#fde68a",
+                          color:
+                            "#fde68a",
                           fontSize: 11,
                         }}
                       >
@@ -1112,6 +1350,7 @@ export default function Dashboard() {
         <button
           type="button"
           onClick={seDeconnecter}
+          disabled={deconnexionEnCours}
           style={{
             width: "100%",
             marginTop: 13,
@@ -1119,12 +1358,20 @@ export default function Dashboard() {
             border:
               "1px solid rgba(148, 163, 184, 0.16)",
             borderRadius: 11,
-            color: couleurs.secondaire,
+            color:
+              couleurs.secondaire,
             background: "transparent",
-            cursor: "pointer",
+            cursor: deconnexionEnCours
+              ? "not-allowed"
+              : "pointer",
+            opacity: deconnexionEnCours
+              ? 0.55
+              : 1,
           }}
         >
-          Se déconnecter
+          {deconnexionEnCours
+            ? "Déconnexion..."
+            : "Se déconnecter"}
         </button>
       </div>
 
