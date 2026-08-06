@@ -5,12 +5,38 @@ import {
   useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  ChevronRight,
+  Medal,
+  Star,
+  Swords,
+  Trophy,
+  Users,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { supabase } from "../services/supabase";
 
 import BottomNav from "../components/BottomNav";
 import LivePodium from "../components/LivePodium";
-import Card from "../components/ui/Card";
 import PrimaryButton from "../components/ui/PrimaryButton";
+
+const couleurs = {
+  fond: "#020617",
+  carte: "rgba(15, 23, 42, 0.84)",
+  carteClaire: "rgba(30, 41, 59, 0.66)",
+  bordure: "rgba(148, 163, 184, 0.15)",
+  texte: "#f8fafc",
+  secondaire: "#94a3b8",
+  violet: "#8b5cf6",
+  violetClair: "#c4b5fd",
+};
+
+const styleCarte = {
+  border: `1px solid ${couleurs.bordure}`,
+  borderRadius: 14,
+  background: couleurs.carte,
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -27,8 +53,7 @@ export default function Dashboard() {
   const [animationPoints, setAnimationPoints] = useState(false);
   const [animationVictoires, setAnimationVictoires] =
     useState(false);
-  const [animationEquipe, setAnimationEquipe] =
-    useState(false);
+  const [animationEquipe, setAnimationEquipe] = useState(false);
 
   const [sonsActifs, setSonsActifs] = useState(
     localStorage.getItem("olympiades_sons") !== "false"
@@ -46,18 +71,13 @@ export default function Dashboard() {
   useEffect(() => {
     chargerDonnees();
 
-    const intervalle = window.setInterval(
-      chargerDonnees,
-      5000
-    );
+    const intervalle = window.setInterval(chargerDonnees, 5000);
 
     return () => {
       window.clearInterval(intervalle);
 
       if (minuterieNotification.current) {
-        window.clearTimeout(
-          minuterieNotification.current
-        );
+        window.clearTimeout(minuterieNotification.current);
       }
     };
   }, []);
@@ -70,13 +90,12 @@ export default function Dashboard() {
       return;
     }
 
-    const [profilResponse, etatResponse] =
-      await Promise.all([
-        supabase.rpc("get_player_profile", {
-          p_player_id: Number(playerId),
-        }),
-        supabase.rpc("get_state"),
-      ]);
+    const [profilResponse, etatResponse] = await Promise.all([
+      supabase.rpc("get_player_profile", {
+        p_player_id: Number(playerId),
+      }),
+      supabase.rpc("get_state"),
+    ]);
 
     if (profilResponse.error) {
       console.error(profilResponse.error);
@@ -100,14 +119,9 @@ export default function Dashboard() {
       return;
     }
 
-    const nouveauxJoueurs =
-      etatResponse.data?.players ?? [];
-
-    const nouvellesEquipes =
-      etatResponse.data?.teams ?? [];
-
-    const nouveauxDefis =
-      etatResponse.data?.challenges ?? [];
+    const nouveauxJoueurs = etatResponse.data?.players ?? [];
+    const nouvellesEquipes = etatResponse.data?.teams ?? [];
+    const nouveauxDefis = etatResponse.data?.challenges ?? [];
 
     detecterNouveauDefiValide(
       nouveauxDefis,
@@ -138,9 +152,7 @@ export default function Dashboard() {
 
     if (!initialisationTerminee.current) {
       idsDefisValidesConnus.current = new Set(
-        defisValides.map((defi) =>
-          Number(defi.id)
-        )
+        defisValides.map((defi) => Number(defi.id))
       );
 
       initialisationTerminee.current = true;
@@ -149,25 +161,18 @@ export default function Dashboard() {
 
     const nouveauDefi = defisValides.find(
       (defi) =>
-        !idsDefisValidesConnus.current.has(
-          Number(defi.id)
-        )
+        !idsDefisValidesConnus.current.has(Number(defi.id))
     );
 
     defisValides.forEach((defi) => {
-      idsDefisValidesConnus.current.add(
-        Number(defi.id)
-      );
+      idsDefisValidesConnus.current.add(Number(defi.id));
     });
 
-    if (!nouveauDefi) {
-      return;
-    }
+    if (!nouveauDefi) return;
 
     const gagnant = nouveauxJoueurs.find(
       (element) =>
-        Number(element.id) ===
-        Number(nouveauDefi.winner_id)
+        Number(element.id) === Number(nouveauDefi.winner_id)
     );
 
     const equipeGagnante = nouvellesEquipes.find(
@@ -184,28 +189,22 @@ export default function Dashboard() {
       Number(nouveauDefi.opponent_id) === playerId ||
       Number(nouveauDefi.witness_id) === playerId;
 
+    const joueurActuel = nouveauxJoueurs.find(
+      (element) => Number(element.id) === playerId
+    );
+
     const concerneEquipe =
       Boolean(equipeGagnante?.id) &&
-      nouveauxJoueurs.some(
-        (element) =>
-          Number(element.id) === playerId &&
-          Number(element.team_id) ===
-            Number(equipeGagnante.id)
-      );
+      Number(joueurActuel?.team_id) === Number(equipeGagnante.id);
 
     afficherNotification({
-      titre: `🏆 ${
-        gagnant?.first_name ?? "Un joueur"
-      } remporte son défi !`,
+      titre: `${gagnant?.first_name ?? "Un joueur"} remporte son défi`,
       texte: equipeGagnante
         ? `${equipeGagnante.flag} ${equipeGagnante.name} gagne 1 point.`
         : "Le classement vient d’être mis à jour.",
     });
 
-    if (
-      sonsActifs &&
-      (concerneJoueur || concerneEquipe)
-    ) {
+    if (sonsActifs && (concerneJoueur || concerneEquipe)) {
       jouerApplaudissements();
     }
   }
@@ -214,26 +213,20 @@ export default function Dashboard() {
     setNotification(nouvelleNotification);
 
     if (minuterieNotification.current) {
-      window.clearTimeout(
-        minuterieNotification.current
-      );
+      window.clearTimeout(minuterieNotification.current);
     }
 
-    minuterieNotification.current =
-      window.setTimeout(() => {
-        setNotification(null);
-      }, 5000);
+    minuterieNotification.current = window.setTimeout(() => {
+      setNotification(null);
+    }, 5000);
   }
 
   function jouerApplaudissements() {
     try {
       const AudioContext =
-        window.AudioContext ||
-        window.webkitAudioContext;
+        window.AudioContext || window.webkitAudioContext;
 
-      if (!AudioContext) {
-        return;
-      }
+      if (!AudioContext) return;
 
       const contexte = new AudioContext();
 
@@ -250,8 +243,7 @@ export default function Dashboard() {
         index += 1
       ) {
         const debut =
-          contexte.currentTime +
-          Math.random() * duree;
+          contexte.currentTime + Math.random() * duree;
 
         const buffer = contexte.createBuffer(
           1,
@@ -274,14 +266,9 @@ export default function Dashboard() {
             );
         }
 
-        const source =
-          contexte.createBufferSource();
-
-        const filtre =
-          contexte.createBiquadFilter();
-
-        const gain =
-          contexte.createGain();
+        const source = contexte.createBufferSource();
+        const filtre = contexte.createBiquadFilter();
+        const gain = contexte.createGain();
 
         source.buffer = buffer;
 
@@ -339,14 +326,12 @@ export default function Dashboard() {
         ...equipe,
         membres: joueurs.filter(
           (membre) =>
-            Number(membre.team_id) ===
-            Number(equipe.id)
+            Number(membre.team_id) === Number(equipe.id)
         ),
         scoreTotal: Number(equipe.score ?? 0),
       }))
       .sort((a, b) => {
-        const difference =
-          b.scoreTotal - a.scoreTotal;
+        const difference = b.scoreTotal - a.scoreTotal;
 
         if (difference !== 0) {
           return difference;
@@ -361,22 +346,19 @@ export default function Dashboard() {
 
   const monEquipe = classement.find(
     (equipe) =>
-      Number(equipe.id) ===
-      Number(joueur?.team_id)
+      Number(equipe.id) === Number(joueur?.team_id)
   );
 
   const positionEquipe =
     classement.findIndex(
       (equipe) =>
-        Number(equipe.id) ===
-        Number(joueur?.team_id)
+        Number(equipe.id) === Number(joueur?.team_id)
     ) + 1;
 
   const monProfilComplet =
     joueurs.find(
       (membre) =>
-        Number(membre.id) ===
-        Number(joueur?.id)
+        Number(membre.id) === Number(joueur?.id)
     ) ?? joueur;
 
   const pointsJoueur = Number(
@@ -393,9 +375,7 @@ export default function Dashboard() {
       return;
     }
 
-    if (
-      anciensPointsJoueur.current !== pointsJoueur
-    ) {
+    if (anciensPointsJoueur.current !== pointsJoueur) {
       setAnimationPoints(true);
 
       const minuterie = window.setTimeout(() => {
@@ -404,8 +384,7 @@ export default function Dashboard() {
 
       anciensPointsJoueur.current = pointsJoueur;
 
-      return () =>
-        window.clearTimeout(minuterie);
+      return () => window.clearTimeout(minuterie);
     }
   }, [pointsJoueur]);
 
@@ -415,9 +394,7 @@ export default function Dashboard() {
       return;
     }
 
-    if (
-      anciennesVictoires.current !== victoires
-    ) {
+    if (anciennesVictoires.current !== victoires) {
       setAnimationVictoires(true);
 
       const minuterie = window.setTimeout(() => {
@@ -426,27 +403,21 @@ export default function Dashboard() {
 
       anciennesVictoires.current = victoires;
 
-      return () =>
-        window.clearTimeout(minuterie);
+      return () => window.clearTimeout(minuterie);
     }
   }, [victoires]);
 
   useEffect(() => {
-    const scoreEquipe =
-      monEquipe?.scoreTotal ?? null;
+    const scoreEquipe = monEquipe?.scoreTotal ?? null;
 
-    if (scoreEquipe === null) {
-      return;
-    }
+    if (scoreEquipe === null) return;
 
     if (anciensPointsEquipe.current === null) {
       anciensPointsEquipe.current = scoreEquipe;
       return;
     }
 
-    if (
-      anciensPointsEquipe.current !== scoreEquipe
-    ) {
+    if (anciensPointsEquipe.current !== scoreEquipe) {
       setAnimationEquipe(true);
 
       const minuterie = window.setTimeout(() => {
@@ -455,25 +426,19 @@ export default function Dashboard() {
 
       anciensPointsEquipe.current = scoreEquipe;
 
-      return () =>
-        window.clearTimeout(minuterie);
+      return () => window.clearTimeout(minuterie);
     }
   }, [monEquipe?.scoreTotal]);
 
   const mesDefis = useMemo(() => {
-    if (!joueur) {
-      return [];
-    }
+    if (!joueur) return [];
 
     return defis
       .filter(
         (defi) =>
-          Number(defi.creator_id) ===
-            Number(joueur.id) ||
-          Number(defi.opponent_id) ===
-            Number(joueur.id) ||
-          Number(defi.witness_id) ===
-            Number(joueur.id)
+          Number(defi.creator_id) === Number(joueur.id) ||
+          Number(defi.opponent_id) === Number(joueur.id) ||
+          Number(defi.witness_id) === Number(joueur.id)
       )
       .sort(
         (a, b) =>
@@ -486,22 +451,18 @@ export default function Dashboard() {
     (defi) => defi.status === "pending"
   );
 
-  const dernierDefi =
-    defiEnAttente ?? mesDefis[0];
+  const dernierDefi = defiEnAttente ?? mesDefis[0];
 
   function trouverJoueur(id) {
     return joueurs.find(
-      (element) =>
-        Number(element.id) === Number(id)
+      (element) => Number(element.id) === Number(id)
     );
   }
 
   function nomJoueur(id) {
     const joueurTrouve = trouverJoueur(id);
 
-    if (!joueurTrouve) {
-      return "Joueur inconnu";
-    }
+    if (!joueurTrouve) return "Joueur inconnu";
 
     return joueurTrouve.nickname
       ? `${joueurTrouve.first_name} — ${joueurTrouve.nickname}`
@@ -509,20 +470,16 @@ export default function Dashboard() {
   }
 
   function adversaireDuDefi(defi) {
-    if (!defi) {
-      return "";
-    }
+    if (!defi) return "";
 
     if (
-      Number(defi.creator_id) ===
-      Number(joueur.id)
+      Number(defi.creator_id) === Number(joueur.id)
     ) {
       return nomJoueur(defi.opponent_id);
     }
 
     if (
-      Number(defi.opponent_id) ===
-      Number(joueur.id)
+      Number(defi.opponent_id) === Number(joueur.id)
     ) {
       return nomJoueur(defi.creator_id);
     }
@@ -536,8 +493,8 @@ export default function Dashboard() {
     if (!defi) {
       return {
         texte: "Aucun défi",
-        couleur: "#cbd5e1",
-        fond: "rgba(148, 163, 184, 0.12)",
+        couleur: "#94a3b8",
+        fond: "rgba(148, 163, 184, 0.1)",
       };
     }
 
@@ -545,34 +502,30 @@ export default function Dashboard() {
       return {
         texte: "En attente",
         couleur: "#fde047",
-        fond: "rgba(250, 204, 21, 0.14)",
+        fond: "rgba(250, 204, 21, 0.11)",
       };
     }
 
     if (
-      Number(defi.winner_id) ===
-      Number(joueur.id)
+      Number(defi.winner_id) === Number(joueur.id)
     ) {
       return {
         texte: "Gagné",
         couleur: "#4ade80",
-        fond: "rgba(34, 197, 94, 0.14)",
+        fond: "rgba(34, 197, 94, 0.11)",
       };
     }
 
     return {
       texte: "Terminé",
       couleur: "#cbd5e1",
-      fond: "rgba(148, 163, 184, 0.12)",
+      fond: "rgba(148, 163, 184, 0.1)",
     };
   }
 
-  function medaillePosition(position) {
-    if (position === 1) return "🥇";
-    if (position === 2) return "🥈";
-    if (position === 3) return "🥉";
-
-    return "🏅";
+  function textePosition(position) {
+    if (position === 1) return "1re";
+    return `${position}e`;
   }
 
   function seDeconnecter() {
@@ -587,9 +540,9 @@ export default function Dashboard() {
   };
 
   const styleRebond = {
-    transform: "scale(1.045)",
+    transform: "scale(1.02)",
     boxShadow:
-      "0 0 0 2px rgba(167, 139, 250, 0.38), 0 18px 40px rgba(76, 29, 149, 0.32)",
+      "0 0 0 2px rgba(167, 139, 250, 0.25)",
   };
 
   if (chargement) {
@@ -598,8 +551,8 @@ export default function Dashboard() {
         style={{
           minHeight: "100vh",
           padding: 40,
-          color: "#f8fafc",
-          background: "#020617",
+          color: couleurs.texte,
+          background: couleurs.fond,
         }}
       >
         Chargement...
@@ -613,17 +566,15 @@ export default function Dashboard() {
         style={{
           minHeight: "100vh",
           padding: 30,
-          color: "#f8fafc",
-          background: "#020617",
+          color: couleurs.texte,
+          background: couleurs.fond,
         }}
       >
         <h1>Une erreur est survenue</h1>
         <p>{erreur}</p>
 
         <PrimaryButton
-          onClick={() =>
-            navigate("/connexion")
-          }
+          onClick={() => navigate("/connexion")}
         >
           Retour à la connexion
         </PrimaryButton>
@@ -637,49 +588,43 @@ export default function Dashboard() {
     <main
       style={{
         minHeight: "100vh",
-        padding: "18px 18px 105px",
-        color: "#f8fafc",
+        padding: "16px 14px 105px",
+        color: couleurs.texte,
         background:
-          "radial-gradient(circle at top, #17164f 0%, #080d20 40%, #020617 100%)",
+          "radial-gradient(circle at top, #17164f 0%, #080d20 38%, #020617 100%)",
       }}
     >
       {notification && (
         <div
           style={{
             position: "fixed",
-            top: 18,
+            top: 16,
             left: "50%",
             zIndex: 2000,
-            width: "calc(100% - 36px)",
-            maxWidth: 560,
-            padding: "16px 18px",
+            width: "calc(100% - 28px)",
+            maxWidth: 520,
+            padding: "13px 15px",
             border:
-              "1px solid rgba(34, 197, 94, 0.4)",
-            borderRadius: 16,
+              "1px solid rgba(34, 197, 94, 0.35)",
+            borderRadius: 13,
             color: "#f0fdf4",
-            background:
-              "linear-gradient(135deg, rgba(20, 83, 45, 0.98), rgba(21, 128, 61, 0.96))",
+            background: "rgba(20, 83, 45, 0.98)",
             boxShadow:
-              "0 18px 50px rgba(0, 0, 0, 0.38)",
-            transform:
-              "translateX(-50%)",
+              "0 12px 35px rgba(0, 0, 0, 0.3)",
+            transform: "translateX(-50%)",
             animation:
-              "olympiadesNotification 0.35s ease",
+              "olympiadesNotification 0.3s ease",
           }}
         >
-          <strong
-            style={{
-              display: "block",
-              fontSize: 17,
-            }}
-          >
+          <strong style={{ display: "block" }}>
             {notification.titre}
           </strong>
 
           <div
             style={{
-              marginTop: 5,
+              marginTop: 3,
               color: "#bbf7d0",
+              fontSize: 13,
             }}
           >
             {notification.texte}
@@ -692,44 +637,35 @@ export default function Dashboard() {
           @keyframes olympiadesNotification {
             from {
               opacity: 0;
-              transform: translate(-50%, -18px) scale(0.97);
+              transform: translate(-50%, -12px);
             }
 
             to {
               opacity: 1;
-              transform: translate(-50%, 0) scale(1);
+              transform: translate(-50%, 0);
             }
           }
         `}
       </style>
 
-      <div
-        style={{
-          maxWidth: 900,
-          margin: "0 auto",
-        }}
-      >
+      <div style={{ maxWidth: 760, margin: "0 auto" }}>
         <LivePodium />
 
-        <header
-          style={{
-            margin: "26px 0 22px",
-          }}
-        >
+        <header style={{ margin: "20px 0 16px" }}>
           <div
             style={{
               display: "flex",
               alignItems: "flex-start",
               justifyContent: "space-between",
-              gap: 14,
+              gap: 12,
             }}
           >
-            <div>
+            <div style={{ minWidth: 0 }}>
               <p
                 style={{
                   margin: 0,
-                  color: "#8b5cf6",
-                  fontSize: 14,
+                  color: couleurs.violet,
+                  fontSize: 12,
                   fontWeight: 900,
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
@@ -740,23 +676,13 @@ export default function Dashboard() {
 
               <h1
                 style={{
-                  margin: "8px 0 4px",
-                  fontSize:
-                    "clamp(32px, 7vw, 48px)",
-                  lineHeight: 1.05,
+                  margin: "5px 0 0",
+                  fontSize: "clamp(27px, 7vw, 40px)",
+                  lineHeight: 1.08,
                 }}
               >
-                Bonjour {joueur.first_name} 👋
+                Bonjour {joueur.first_name}
               </h1>
-
-              <p
-                style={{
-                  margin: 0,
-                  color: "#aeb8cb",
-                }}
-              >
-                Prêt à faire gagner ton équipe ?
-              </p>
             </div>
 
             <button
@@ -768,392 +694,393 @@ export default function Dashboard() {
                   : "Activer les sons"
               }
               style={{
+                display: "grid",
+                width: 40,
+                height: 40,
                 flexShrink: 0,
-                padding: "9px 12px",
+                placeItems: "center",
+                padding: 0,
                 border:
-                  "1px solid rgba(148, 163, 184, 0.2)",
-                borderRadius: 999,
+                  "1px solid rgba(148, 163, 184, 0.18)",
+                borderRadius: 11,
                 color: sonsActifs
-                  ? "#c4b5fd"
-                  : "#94a3b8",
-                background:
-                  "rgba(15, 23, 42, 0.72)",
+                  ? couleurs.violetClair
+                  : couleurs.secondaire,
+                background: couleurs.carte,
                 cursor: "pointer",
               }}
             >
-              {sonsActifs
-                ? "🔊 Sons"
-                : "🔇 Sons"}
+              {sonsActifs ? (
+                <Volume2 size={19} />
+              ) : (
+                <VolumeX size={19} />
+              )}
             </button>
           </div>
         </header>
 
         {monEquipe ? (
-          <Card
+          <section
             style={{
-              padding: 24,
-              background:
-                "linear-gradient(120deg, #4f2bd7 0%, #3121a4 62%, #181767 100%)",
-              border:
-                "1px solid rgba(139, 92, 246, 0.5)",
+              ...styleCarte,
+              display: "grid",
+              gridTemplateColumns:
+                "minmax(0, 1fr) auto",
+              alignItems: "center",
+              gap: 14,
+              padding: "14px 16px",
               ...styleAnimation,
-              ...(animationEquipe
-                ? styleRebond
-                : {}),
+              ...(animationEquipe ? styleRebond : {}),
             }}
           >
             <div
               style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "minmax(0, 1.5fr) minmax(110px, 0.75fr) minmax(110px, 0.75fr)",
+                display: "flex",
                 alignItems: "center",
-                gap: 18,
+                gap: 11,
+                minWidth: 0,
               }}
             >
-              <div>
-                <div style={{ fontSize: 48 }}>
-                  {monEquipe.flag}
-                </div>
+              <span
+                style={{
+                  flexShrink: 0,
+                  fontSize: 29,
+                  lineHeight: 1,
+                }}
+              >
+                {monEquipe.flag}
+              </span>
 
-                <div
+              <div style={{ minWidth: 0 }}>
+                <strong
                   style={{
-                    marginTop: 10,
-                    fontSize:
-                      "clamp(23px, 5vw, 34px)",
-                    fontWeight: 900,
-                    textTransform: "uppercase",
+                    display: "block",
+                    overflow: "hidden",
+                    fontSize: 18,
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {monEquipe.name}
-                </div>
-              </div>
-
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 34 }}>
-                  {medaillePosition(
-                    positionEquipe
-                  )}
-                </div>
-
-                <strong
-                  style={{
-                    display: "block",
-                    marginTop: 4,
-                    fontSize: 28,
-                  }}
-                >
-                  {positionEquipe}e
                 </strong>
 
-                <span
+                <div
                   style={{
-                    display: "block",
-                    marginTop: 4,
-                    color: "#d8d6ff",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    marginTop: 3,
+                    color: couleurs.secondaire,
                     fontSize: 12,
-                    fontWeight: 800,
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
                   }}
                 >
-                  Équipe
-                </span>
-              </div>
-
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 34 }}>
-                  ⭐
+                  <Medal size={14} />
+                  {textePosition(positionEquipe)} au classement
                 </div>
-
-                <strong
-                  style={{
-                    display: "block",
-                    marginTop: 4,
-                    fontSize: 28,
-                  }}
-                >
-                  {monEquipe.scoreTotal}
-                </strong>
-
-                <span
-                  style={{
-                    display: "block",
-                    marginTop: 4,
-                    color: "#d8d6ff",
-                    fontSize: 12,
-                    fontWeight: 800,
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Points équipe
-                </span>
               </div>
             </div>
-          </Card>
+
+            <div
+              style={{
+                textAlign: "right",
+                ...styleAnimation,
+              }}
+            >
+              <strong
+                style={{
+                  display: "block",
+                  fontSize: 23,
+                  lineHeight: 1,
+                }}
+              >
+                {monEquipe.scoreTotal}
+              </strong>
+
+              <span
+                style={{
+                  color: couleurs.secondaire,
+                  fontSize: 10,
+                  textTransform: "uppercase",
+                }}
+              >
+                points
+              </span>
+            </div>
+          </section>
         ) : (
-          <Card>
-            <h2 style={{ marginTop: 0 }}>
-              Répartition à venir
-            </h2>
+          <section
+            style={{
+              ...styleCarte,
+              padding: 16,
+            }}
+          >
+            <strong>Répartition à venir</strong>
 
             <p
               style={{
-                marginBottom: 0,
-                color: "#cbd5e1",
+                margin: "4px 0 0",
+                color: couleurs.secondaire,
+                fontSize: 13,
               }}
             >
-              Les équipes ne sont pas encore
-              constituées.
+              Les équipes ne sont pas encore constituées.
             </p>
-          </Card>
+          </section>
         )}
 
-        <div
+        <section
           style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(2, minmax(0, 1fr))",
-            gap: 14,
-            marginTop: 14,
+            ...styleCarte,
+            marginTop: 9,
+            overflow: "hidden",
           }}
         >
-          <Card
-            style={{
-              minHeight: 110,
-              display: "flex",
-              alignItems: "center",
-              gap: 18,
-              ...styleAnimation,
-              ...(animationPoints
-                ? styleRebond
-                : {}),
-            }}
-          >
-            <div
-              style={{
-                display: "grid",
-                placeItems: "center",
-                width: 58,
-                height: 58,
-                flexShrink: 0,
-                borderRadius: 16,
-                background:
-                  "rgba(250, 204, 21, 0.1)",
-                fontSize: 32,
-              }}
-            >
-              ⭐
-            </div>
-
-            <div>
-              <strong style={{ fontSize: 34 }}>
-                {pointsJoueur}
-              </strong>
-
-              <div
-                style={{
-                  marginTop: 3,
-                  fontSize: 14,
-                  fontWeight: 900,
-                  textTransform: "uppercase",
-                }}
-              >
-                Points
-              </div>
-
-              <div
-                style={{
-                  marginTop: 3,
-                  color: "#94a3b8",
-                  fontSize: 13,
-                }}
-              >
-                Points personnels
-              </div>
-            </div>
-          </Card>
-
-          <Card
-            style={{
-              minHeight: 110,
-              display: "flex",
-              alignItems: "center",
-              gap: 18,
-              ...styleAnimation,
-              ...(animationVictoires
-                ? styleRebond
-                : {}),
-            }}
-          >
-            <div
-              style={{
-                display: "grid",
-                placeItems: "center",
-                width: 58,
-                height: 58,
-                flexShrink: 0,
-                borderRadius: 16,
-                background:
-                  "rgba(124, 58, 237, 0.18)",
-                fontSize: 32,
-              }}
-            >
-              💪
-            </div>
-
-            <div>
-              <strong style={{ fontSize: 34 }}>
-                {victoires}
-                <span style={{ fontSize: 20 }}>
-                  /10
-                </span>
-              </strong>
-
-              <div
-                style={{
-                  marginTop: 3,
-                  fontSize: 14,
-                  fontWeight: 900,
-                  textTransform: "uppercase",
-                }}
-              >
-                Victoires
-              </div>
-
-              <div
-                style={{
-                  marginTop: 3,
-                  color: "#94a3b8",
-                  fontSize: 13,
-                }}
-              >
-                Défis gagnés
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        <Card style={{ marginTop: 14 }}>
           <div
             style={{
-              color: "#a78bfa",
-              fontSize: 13,
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(2, minmax(0, 1fr))",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "13px 14px",
+                borderRight: `1px solid ${couleurs.bordure}`,
+                ...styleAnimation,
+                ...(animationPoints ? styleRebond : {}),
+              }}
+            >
+              <Star
+                size={20}
+                color="#fde047"
+                fill="rgba(250, 204, 21, 0.18)"
+              />
+
+              <div>
+                <strong
+                  style={{
+                    display: "block",
+                    fontSize: 20,
+                    lineHeight: 1,
+                  }}
+                >
+                  {pointsJoueur}
+                </strong>
+
+                <span
+                  style={{
+                    color: couleurs.secondaire,
+                    fontSize: 11,
+                  }}
+                >
+                  Points personnels
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "13px 14px",
+                ...styleAnimation,
+                ...(animationVictoires
+                  ? styleRebond
+                  : {}),
+              }}
+            >
+              <Trophy
+                size={20}
+                color={couleurs.violetClair}
+              />
+
+              <div>
+                <strong
+                  style={{
+                    display: "block",
+                    fontSize: 20,
+                    lineHeight: 1,
+                  }}
+                >
+                  {victoires}
+                  <span
+                    style={{
+                      color: couleurs.secondaire,
+                      fontSize: 12,
+                    }}
+                  >
+                    /10
+                  </span>
+                </strong>
+
+                <span
+                  style={{
+                    color: couleurs.secondaire,
+                    fontSize: 11,
+                  }}
+                >
+                  Défis gagnés
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          style={{
+            ...styleCarte,
+            marginTop: 9,
+            padding: "14px 15px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+              color: couleurs.violetClair,
+              fontSize: 11,
               fontWeight: 900,
               letterSpacing: "0.06em",
               textTransform: "uppercase",
             }}
           >
-            ⚔️ Mon défi
+            <Swords size={15} />
+            Mon défi
           </div>
 
           <div
             style={{
-              display: "flex",
+              display: "grid",
+              gridTemplateColumns:
+                "minmax(0, 1fr) auto",
               alignItems: "center",
-              justifyContent: "space-between",
-              gap: 18,
-              marginTop: 15,
+              gap: 12,
+              marginTop: 10,
             }}
           >
             <div style={{ minWidth: 0 }}>
-              <h2
+              <strong
                 style={{
-                  margin: 0,
+                  display: "block",
                   overflow: "hidden",
-                  fontSize: 23,
+                  fontSize: 16,
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                 }}
               >
                 {dernierDefi?.name ??
                   "Aucun défi actif"}
-              </h2>
+              </strong>
 
-              <p
+              <div
                 style={{
-                  margin: "6px 0 0",
-                  color: "#b4bfd2",
+                  marginTop: 3,
+                  overflow: "hidden",
+                  color: couleurs.secondaire,
+                  fontSize: 12,
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
                 }}
               >
                 {dernierDefi
-                  ? `VS ${adversaireDuDefi(
+                  ? `Contre ${adversaireDuDefi(
                       dernierDefi
                     )}`
                   : "Lance ton prochain défi."}
-              </p>
+              </div>
             </div>
 
             <span
               style={{
-                flexShrink: 0,
-                padding: "9px 15px",
+                padding: "6px 9px",
                 borderRadius: 999,
                 color: statut.couleur,
                 background: statut.fond,
-                fontSize: 14,
-                fontWeight: 900,
+                fontSize: 11,
+                fontWeight: 800,
               }}
             >
               {statut.texte}
             </span>
           </div>
 
-          <PrimaryButton
+          <button
+            type="button"
             onClick={() => navigate("/defis")}
-            style={{ marginTop: 20 }}
+            style={{
+              display: "flex",
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginTop: 12,
+              padding: "10px 0 0",
+              border: 0,
+              borderTop: `1px solid ${couleurs.bordure}`,
+              color: couleurs.violetClair,
+              background: "transparent",
+              fontWeight: 800,
+              cursor: "pointer",
+            }}
           >
-            Voir mes défis →
-          </PrimaryButton>
-        </Card>
+            Voir mes défis
+            <ChevronRight size={18} />
+          </button>
+        </section>
 
         {monEquipe && (
-          <Card style={{ marginTop: 14 }}>
+          <section
+            style={{
+              ...styleCarte,
+              marginTop: 9,
+              padding: "14px 15px",
+            }}
+          >
             <div
               style={{
-                marginBottom: 14,
-                color: "#cbd5e1",
-                fontSize: 13,
+                display: "flex",
+                alignItems: "center",
+                gap: 7,
+                marginBottom: 9,
+                color: couleurs.secondaire,
+                fontSize: 11,
                 fontWeight: 900,
                 letterSpacing: "0.06em",
                 textTransform: "uppercase",
               }}
             >
-              👥 Mon équipe
+              <Users size={15} />
+              Mon équipe
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit, minmax(160px, 1fr))",
-                gap: 10,
-              }}
-            >
+            <div>
               {monEquipe.membres.map(
-                (membre) => (
+                (membre, index) => (
                   <div
                     key={membre.id}
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      justifyContent:
-                        "space-between",
+                      justifyContent: "space-between",
                       gap: 10,
-                      padding: "13px 14px",
-                      border:
-                        "1px solid rgba(148, 163, 184, 0.12)",
-                      borderRadius: 14,
-                      background:
-                        "rgba(255, 255, 255, 0.04)",
+                      minHeight: 38,
+                      padding: "7px 0",
+                      borderTop:
+                        index === 0
+                          ? "none"
+                          : `1px solid ${couleurs.bordure}`,
                     }}
                   >
-                    <div
+                    <span
                       style={{
                         minWidth: 0,
                         overflow: "hidden",
-                        fontWeight: 800,
+                        fontSize: 14,
+                        fontWeight: 700,
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
                       }}
@@ -1162,18 +1089,24 @@ export default function Dashboard() {
                       {membre.nickname
                         ? ` — ${membre.nickname}`
                         : ""}
-                    </div>
+                    </span>
 
                     {membre.is_captain && (
-                      <span title="Chef d’équipe">
-                        👑
+                      <span
+                        style={{
+                          flexShrink: 0,
+                          color: "#fde68a",
+                          fontSize: 11,
+                        }}
+                      >
+                        Capitaine
                       </span>
                     )}
                   </div>
                 )
               )}
             </div>
-          </Card>
+          </section>
         )}
 
         <button
@@ -1181,12 +1114,12 @@ export default function Dashboard() {
           onClick={seDeconnecter}
           style={{
             width: "100%",
-            marginTop: 20,
-            padding: 13,
+            marginTop: 13,
+            padding: 11,
             border:
-              "1px solid rgba(148, 163, 184, 0.22)",
-            borderRadius: 12,
-            color: "#aeb8cb",
+              "1px solid rgba(148, 163, 184, 0.16)",
+            borderRadius: 11,
+            color: couleurs.secondaire,
             background: "transparent",
             cursor: "pointer",
           }}
