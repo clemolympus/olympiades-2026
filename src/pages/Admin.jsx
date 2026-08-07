@@ -614,7 +614,7 @@ async function reinitialiserOlympiades() {
   setMessage("");
 
   const { error } = await supabase.rpc(
-    "admin_reset_all",
+    "admin_reset_olympiads",
     {
       p_token: tokenAdmin,
     }
