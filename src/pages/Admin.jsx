@@ -78,7 +78,7 @@ export default function Admin() {
   const [affectationEnCours, setAffectationEnCours] = useState(null);
   const [pointsEnCours, setPointsEnCours] = useState(false);
   const [deplacementEnCours, setDeplacementEnCours] = useState(null);
-
+  const [adminActionEnCours, setAdminActionEnCours] = useState(false);
   const [equipesChoisies, setEquipesChoisies] = useState({});
   const [joueurADeplacer, setJoueurADeplacer] = useState(null);
   const [nouvelleEquipeId, setNouvelleEquipeId] = useState("");
@@ -527,7 +527,139 @@ export default function Admin() {
     setMessage("Le défi a été supprimé.");
     await chargerEtat();
   }
+async function generer25Joueurs() {
+  if (!window.confirm("Générer 25 joueurs de test ?")) return;
 
+  setMessage("");
+
+  const { error } = await supabase.rpc(
+    "admin_generate_players",
+    {
+      p_token: tokenAdmin,
+    }
+  );
+
+  if (error) {
+    console.error(error);
+    alert(error.message);
+    return;
+  }
+
+  setMessage("25 joueurs générés.");
+  chargerEtat();
+}
+
+async function remettreCompteursAZero() {
+  if (
+    !window.confirm(
+      "Remettre tous les points, victoires et scores à zéro ?"
+    )
+  )
+    return;
+
+  setMessage("");
+
+  const { error } = await supabase.rpc(
+    "admin_reset_scores",
+    {
+      p_token: tokenAdmin,
+    }
+  );
+
+  if (error) {
+    console.error(error);
+    alert(error.message);
+    return;
+  }
+
+  setMessage("Tous les compteurs ont été remis à zéro.");
+  chargerEtat();
+}
+
+async function supprimerTousLesJoueurs() {
+  if (
+    !window.confirm(
+      "Supprimer TOUS les joueurs ?"
+    )
+  )
+    return;
+
+  setMessage("");
+
+  const { error } = await supabase.rpc(
+    "admin_delete_all_players",
+    {
+      p_token: tokenAdmin,
+    }
+  );
+
+  if (error) {
+    console.error(error);
+    alert(error.message);
+    return;
+  }
+
+  setMessage("Tous les joueurs ont été supprimés.");
+  chargerEtat();
+}
+
+async function reinitialiserOlympiades() {
+  if (
+    !window.confirm(
+      "Réinitialiser complètement les Olympiades ?"
+    )
+  )
+    return;
+
+  setMessage("");
+
+  const { error } = await supabase.rpc(
+    "admin_reset_all",
+    {
+      p_token: tokenAdmin,
+    }
+  );
+
+  if (error) {
+    console.error(error);
+    alert(error.message);
+    return;
+  }
+
+  setMessage("Olympiades réinitialisées.");
+  chargerEtat();
+}
+
+async function supprimerJoueur(joueur) {
+  if (
+    !window.confirm(
+      `Supprimer ${afficherNomComplet(joueur)} ?`
+    )
+  )
+    return;
+
+  setMessage("");
+
+  const { error } = await supabase.rpc(
+    "admin_delete_player",
+    {
+      p_token: tokenAdmin,
+      p_player: Number(joueur.id),
+    }
+  );
+
+  if (error) {
+    console.error(error);
+    alert(error.message);
+    return;
+  }
+
+  setMessage(
+    `${afficherNomComplet(joueur)} supprimé.`
+  );
+
+  chargerEtat();
+}
   function supprimerEquipeChoisie(joueurId) {
     setEquipesChoisies((anciennesEquipes) => {
       const copie = { ...anciennesEquipes };
@@ -761,7 +893,63 @@ export default function Admin() {
             ✅ {message}
           </div>
         )}
+        <section style={{ marginTop: 34 }}>
+  <h2>Administration avancée</h2>
 
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns:
+        "repeat(auto-fit,minmax(240px,1fr))",
+      gap: 14,
+      marginTop: 15,
+    }}
+  >
+    <button
+      disabled={adminActionEnCours}
+      onClick={generer25Joueurs}
+      style={{
+        ...styleBoutonPrincipal,
+        width: "100%",
+      }}
+    >
+      🎲 Générer 25 joueurs
+    </button>
+
+    <button
+      disabled={adminActionEnCours}
+      onClick={remettreCompteursAZero}
+      style={{
+        ...styleBoutonSecondaire,
+        width: "100%",
+      }}
+    >
+      🔄 Remettre les compteurs à 0
+    </button>
+
+    <button
+      disabled={adminActionEnCours}
+      onClick={supprimerTousLesJoueurs}
+      style={{
+        ...styleBoutonDanger,
+        width: "100%",
+      }}
+    >
+      🗑 Supprimer tous les joueurs
+    </button>
+
+    <button
+      disabled={adminActionEnCours}
+      onClick={reinitialiserOlympiades}
+      style={{
+        ...styleBoutonDanger,
+        width: "100%",
+      }}
+    >
+      ♻ Réinitialiser Olympiades
+    </button>
+  </div>
+</section>
         <section style={{ marginTop: 34 }}>
           <h2>Gestion manuelle des points</h2>
 
@@ -1438,18 +1626,33 @@ export default function Admin() {
                             </div>
                           </div>
 
-                          <button
-                            type="button"
-                            onClick={() =>
-                              ouvrirDeplacement(joueur)
-                            }
-                            disabled={
-                              deplacementEnCours === joueur.id
-                            }
-                            style={styleBoutonSecondaire}
-                          >
-                            🔄 Déplacer
-                          </button>
+                       <div
+  style={{
+    display: "flex",
+    gap: 8,
+    flexWrap: "wrap",
+  }}
+>
+  <button
+    type="button"
+    onClick={() =>
+      ouvrirDeplacement(joueur)
+    }
+    style={styleBoutonSecondaire}
+  >
+    🔄 Déplacer
+  </button>
+
+  <button
+    type="button"
+    onClick={() =>
+      supprimerJoueur(joueur)
+    }
+    style={styleBoutonDanger}
+  >
+    🗑
+  </button>
+</div>
                         </div>
                       ))}
                     </div>
