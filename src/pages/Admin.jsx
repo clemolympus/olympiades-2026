@@ -621,13 +621,15 @@ async function reinitialiserOlympiades() {
   );
 
   if (error) {
-    console.error(error);
-    alert(error.message);
-    return;
-  }
+  console.error(error);
+  alert(error.message);
+  return;
+}
 
-  setMessage("Olympiades réinitialisées.");
-  chargerEtat();
+console.log("✅ RPC admin_reset_olympiads réussi");
+
+setMessage("Olympiades réinitialisées.");
+chargerEtat();
 }
 
 async function supprimerJoueur(joueur) {
