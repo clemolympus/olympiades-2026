@@ -33,7 +33,16 @@ export default function Ranking() {
       return;
     }
 
-    setEquipes(data?.teams ?? []);
+    const nombreEquipes = Number(
+      data?.settings?.team_count ?? 6
+    );
+
+    const equipesActives = (data?.teams ?? []).filter(
+      (equipe) =>
+        Number(equipe.sort_order ?? 999) <= nombreEquipes
+    );
+
+    setEquipes(equipesActives);
     setJoueurs(data?.players ?? []);
     setErreur("");
     setChargement(false);

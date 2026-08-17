@@ -74,6 +74,7 @@ export default function Admin() {
 
   const [connexionEnCours, setConnexionEnCours] = useState(false);
   const [repartitionEnCours, setRepartitionEnCours] = useState(false);
+  const [nombreEquipes, setNombreEquipes] = useState(6);
   const [defiEnCours, setDefiEnCours] = useState(null);
   const [affectationEnCours, setAffectationEnCours] = useState(null);
   const [pointsEnCours, setPointsEnCours] = useState(false);
@@ -282,8 +283,9 @@ export default function Admin() {
     setMessage("");
 
     const { error } = await supabase.rpc("admin_allocate", {
-      p_token: tokenAdmin,
-    });
+  p_token: tokenAdmin,
+  p_team_count: Number(nombreEquipes),
+});
 
     setRepartitionEnCours(false);
 
@@ -1468,54 +1470,104 @@ async function supprimerJoueur(joueur) {
         </section>
 
         <section style={{ marginTop: 38 }}>
-          <h2>Répartition complète</h2>
+  <h2>Répartition complète</h2>
 
-          <article
-            style={{
-              ...styleCarte,
-              marginTop: 15,
-            }}
-          >
-            <p>
-              Joueurs inscrits :{" "}
-              <strong>{joueurs.length}</strong>
-            </p>
+  <article
+    style={{
+      ...styleCarte,
+      marginTop: 15,
+    }}
+  >
+    <p>
+      Joueurs inscrits :{" "}
+      <strong>{joueurs.length}</strong>
+    </p>
 
-            <p style={{ marginTop: 7 }}>
-              Joueurs sans équipe :{" "}
-              <strong>{joueursSansEquipe.length}</strong>
-            </p>
+    <p style={{ marginTop: 7 }}>
+      Joueurs sans équipe :{" "}
+      <strong>{joueursSansEquipe.length}</strong>
+    </p>
 
-            <button
-              type="button"
-              onClick={repartirEquipes}
-              disabled={
-                repartitionEnCours ||
-                joueurs.length === 0
-              }
-              style={{
-                ...styleBoutonDanger,
-                width: "100%",
-                marginTop: 15,
-              }}
-            >
-              {repartitionEnCours
-                ? "Répartition en cours..."
-                : "Refaire toute la répartition"}
-            </button>
+    <label
+      style={{
+        display: "block",
+        marginTop: 18,
+        fontWeight: 800,
+      }}
+    >
+      Nombre d’équipes
 
-            <p
-              style={{
-                marginTop: 12,
-                color: "#fca5a5",
-                fontSize: 13,
-              }}
-            >
-              Attention : ce bouton remplace les équipes
-              actuelles de tous les joueurs.
-            </p>
-          </article>
-        </section>
+      <select
+        value={nombreEquipes}
+        onChange={(event) =>
+          setNombreEquipes(Number(event.target.value))
+        }
+        disabled={repartitionEnCours}
+        style={{
+          ...styleChamp,
+          marginTop: 8,
+        }}
+      >
+        <option value={4}>
+          4 équipes
+        </option>
+
+        <option value={5}>
+          5 équipes
+        </option>
+
+        <option value={6}>
+          6 équipes
+        </option>
+      </select>
+    </label>
+
+    <p
+      style={{
+        marginTop: 10,
+        color: couleurs.texteSecondaire,
+        fontSize: 13,
+      }}
+    >
+      {joueurs.length > 0
+        ? `${joueurs.length} joueurs → environ ${Math.floor(
+            joueurs.length / nombreEquipes
+          )} à ${Math.ceil(
+            joueurs.length / nombreEquipes
+          )} joueurs par équipe.`
+        : "Inscris des joueurs avant de lancer la répartition."}
+    </p>
+
+    <button
+      type="button"
+      onClick={repartirEquipes}
+      disabled={
+        repartitionEnCours ||
+        joueurs.length === 0
+      }
+      style={{
+        ...styleBoutonDanger,
+        width: "100%",
+        marginTop: 15,
+      }}
+    >
+      {repartitionEnCours
+        ? "Répartition en cours..."
+        : `Répartir en ${nombreEquipes} équipes`}
+    </button>
+
+    <p
+      style={{
+        marginTop: 12,
+        color: "#fca5a5",
+        fontSize: 13,
+      }}
+    >
+      Attention : ce bouton remplace les équipes
+      actuelles de tous les joueurs.
+    </p>
+  </article>
+</section>
 
         <section style={{ marginTop: 38 }}>
           <h2>Composition actuelle</h2>
@@ -1529,7 +1581,9 @@ async function supprimerJoueur(joueur) {
               marginTop: 15,
             }}
           >
-            {equipes.map((equipe) => {
+            {equipes
+  .slice(0, nombreEquipes)
+  .map((equipe) => {
               const membres = joueurs.filter(
                 (joueur) =>
                   Number(joueur.team_id) ===
